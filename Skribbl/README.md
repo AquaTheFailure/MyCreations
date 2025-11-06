@@ -1,7 +1,6 @@
 # Skribbl Toggle with Hints and Custom Links
 
-**Author:** Mitsuki Tsukihara (Nickname: tsukki)  
-**Date:** 2025-11-06  
+**Author:** Mitsuki Tsukihara (Nickname: Tsukki)
 **Description:** A web-based interface for Skribbl.io that allows toggling between the main game, hints, and custom invite links, while preserving session states. Includes a hideable UI for cleaner gameplay.
 
 ---
