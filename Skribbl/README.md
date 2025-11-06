@@ -27,14 +27,7 @@
    - The update button updates the default without reloading the currently visible iframe, preserving the session.
 6. **Hide UI**: Click the ☰ button in the top-right corner to hide or show the input and settings panel.
 
----
-
-## File Structure
-
-- `index.html` — Main HTML file with embedded CSS and JavaScript.
-- (Optional) Additional assets if required, e.g., logos or icons.
-
----
+   ---
 
 ## Notes
 
