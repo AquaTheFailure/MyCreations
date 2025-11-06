@@ -1,0 +1,83 @@
+Skribbl Project Versioning Guide
+===============================
+
+This guide explains how to properly version your Skribbl HTML/JS projects and name your files for easy tracking and clarity.
+
+---
+
+Versioning Scheme
+----------------
+
+We use Semantic Versioning (SemVer):
+
+V<MAJOR>.<MINOR>.<PATCH>
+
+1. MAJOR
+---------
+- When to increment:
+  - Big changes that break compatibility with previous versions.
+  - Complete UI redesigns or structural changes (e.g., switching from 2 iframes to 1 iframe).
+- Examples:
+  - V2.0.0 → Redesigned UI completely.
+  - V3.0.0 → Added a completely new system, like multiple game support.
+
+2. MINOR
+---------
+- When to increment:
+  - Adding new features without breaking existing functionality.
+  - Examples:
+    - "Join room with code or link"
+    - "Hideable UI"
+    - "Notifications for iframe load"
+- Examples:
+  - V1.1.0 → Added the room join feature.
+  - V1.2.0 → Added iframe toggle between hints and main game.
+
+3. PATCH
+---------
+- When to increment:
+  - Bug fixes or small tweaks.
+  - Cosmetic changes (colors, layout tweaks, small optimizations).
+- Examples:
+  - V1.1.1 → Fixed the input clearing after joining a room.
+  - V1.1.2 → Adjusted iframe size to fit screen properly.
+
+---
+
+File Naming Guidelines
+---------------------
+
+- Keep the version in the filename for clarity:
+
+  V1.0.0.html          → Initial release
+  V1.1.0-RoomJoin.html → Added room join feature
+  V1.1.1-FixInput.html → Fixed input clearing bug
+
+- Include a short description if the update is significant.
+- Keep older versions if you want to maintain a history of changes.
+
+---
+
+Quick Rules of Thumb
+-------------------
+
+1. Big redesign → Increment MAJOR, reset MINOR & PATCH to 0.
+2. Add feature → Increment MINOR, reset PATCH to 0.
+3. Fix bug / small tweak → Increment PATCH only.
+4. Keep previous versions for reference.
+
+---
+
+Example Version Table
+---------------------
+
+Version   | Date       | Description                       | Notes
+--------- | ---------- | --------------------------------- | -------------------
+V1.0.0    | 2025-11-06 | Initial release                    | First working version
+V1.1.0    | 2025-11-07 | Added room join feature            | Compatible with V1.0.0
+V1.1.1    | 2025-11-08 | Fixed input clearing issue         | Minor bug fix
+V2.0.0    | 2025-11-10 | Redesigned to single iframe layout | Breaking changes
+
+---
+
+This system ensures you always know what changed, when, and why, making future updates easier to track.
