@@ -26,7 +26,7 @@
    - The update button updates the default without reloading the currently visible iframe, preserving the session.
 6. **Hide UI**: Click the ☰ button in the top-right corner to hide or show the input and settings panel.
 
-   ---
+---
 
 ## Notes
 
@@ -39,3 +39,9 @@
 ## Author
 
 **Mitsuki Tsukihara** (Tsukki)
+
+---
+
+## Acknowledgment
+
+This code was made by me, Mitsuki Tsukihara, but the errors encountered during development were sent to ChatGPT for fixing. Around 2% of the code was assisted by ChatGPT.
