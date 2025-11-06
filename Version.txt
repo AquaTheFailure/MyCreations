@@ -1,6 +1,6 @@
 # Versioning Scheme
 
-We use **Semantic Versioning (SemVer)**:
+We use Semantic Versioning (SemVer):
 
 V<MAJOR>.<MINOR>.<PATCH>
 
@@ -8,64 +8,64 @@ V<MAJOR>.<MINOR>.<PATCH>
 
 ## 1. MAJOR
 
-**When to increment:**
+When to increment:
 
-* Big changes that break compatibility with previous versions.
-* Complete redesigns or structural changes to the project.
+ Big changes that break compatibility with previous versions.
+ Complete redesigns or structural changes to the project.
 
-**Examples:**
+Examples:
 
-* V2.0.0 → Complete UI redesign.
-* V3.0.0 → Added a completely new system or feature set.
+ V2.0.0 → Complete UI redesign.
+ V3.0.0 → Added a completely new system or feature set.
 
 ---
 
 ## 2. MINOR
 
-**When to increment:**
+When to increment:
 
-* Adding new features without breaking existing functionality.
-* Enhancements that improve user experience or functionality.
+ Adding new features without breaking existing functionality.
+ Enhancements that improve user experience or functionality.
 
-**Examples:**
+Examples:
 
-* V1.1.0 → Added a new feature like a room join option or settings panel.
-* V1.2.0 → Added toggle options, notifications, or other features.
+ V1.1.0 → Added a new feature like a room join option or settings panel.
+ V1.2.0 → Added toggle options, notifications, or other features.
 
 ---
 
 ## 3. PATCH
 
-**When to increment:**
+When to increment:
 
-* Bug fixes or small tweaks.
-* Cosmetic changes (colors, layout tweaks, optimizations).
+ Bug fixes or small tweaks.
+ Cosmetic changes (colors, layout tweaks, optimizations).
 
-**Examples:**
+Examples:
 
-* V1.1.1 → Fixed input clearing issue.
-* V1.1.2 → Adjusted layout for better responsiveness.
+ V1.1.1 → Fixed input clearing issue.
+ V1.1.2 → Adjusted layout for better responsiveness.
 
 ---
 
 # File Naming Guidelines
 
-* Keep the version in the filename for clarity:
+ Keep the version in the filename for clarity:
 
 V1.0.0.html            → Initial release
 V1.1.0-NewFeature.html → Added a new feature
 V1.1.1-FixBug.html     → Fixed a bug or small issue
 
-* Include a short description if the update is significant.
-* Keep older versions for history and reference.
+ Include a short description if the update is significant.
+ Keep older versions for history and reference.
 
 ---
 
 # Quick Rules of Thumb
 
-1. **Big redesign** → Increment **MAJOR**, reset **MINOR** & **PATCH** to 0.
-2. **Add feature** → Increment **MINOR**, reset **PATCH** to 0.
-3. **Fix bug / small tweak** → Increment **PATCH** only.
+1. Big redesign → Increment MAJOR, reset MINOR & PATCH to 0.
+2. Add feature → Increment MINOR, reset PATCH to 0.
+3. Fix bug / small tweak → Increment PATCH only.
 4. Keep previous versions for reference and documentation.
 
 ---
@@ -81,4 +81,4 @@ V1.1.1-FixBug.html     → Fixed a bug or small issue
 
 ---
 
-This system can be applied to **any software, web project, or game**, helping you track **what changed, when, and why**, making updates easier to manage across multi
+This system can be applied to any software, web project, or game, helping you track what changed, when, and why, making updates easier to manage across multi
