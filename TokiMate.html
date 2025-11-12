@@ -8,11 +8,13 @@
 <style>
 * {margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif;}
 html, body {height:100%; overflow:hidden;}
+
 body {
   background: url("https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/de917977268563.5c829061be1d3.gif") center/cover no-repeat;
   display:flex; justify-content:center; align-items:center; flex-direction:column;
   color:white; transition:background 0.5s;
 }
+
 #clockContainer {
   position: relative; cursor:pointer; padding:50px 80px; border-radius:40px;
   background: rgba(255,255,255,0.1); backdrop-filter: blur(20px);
@@ -24,8 +26,9 @@ body {
 #analogClock {display:none; position:relative; width:220px; height:220px; border:10px solid rgba(255,255,255,0.6); border-radius:50%; background: rgba(255,255,255,0.05); box-shadow:0 0 40px rgba(255,255,255,0.2) inset;}
 .hand {position:absolute; width:50%; height:4px; background:white; top:50%; transform-origin:100%; transform:rotate(90deg); transition: transform 0.5s ease-in-out;}
 .hourHand {height:6px;} .minuteHand {height:4px;} .secondHand {height:2px; background:#f43f5e;}
+
 #settingsPanel {
-  position: fixed; top:0; right:-350px; height:100%; width:350px;
+  position: fixed; top:0; right:-400px; height:100%; width:400px;
   background: rgba(0,0,0,0.85); backdrop-filter: blur(20px);
   padding:30px; border-left:1px solid rgba(255,255,255,0.1);
   box-shadow: -5px 0 30px rgba(0,0,0,0.5); color:white; transition: right 0.4s ease;
@@ -34,19 +37,32 @@ body {
 #settingsPanel.active { right:0; }
 label {display:block; margin:15px 0 5px; font-weight:500;}
 select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:none; background: rgba(255,255,255,0.9); color:black; font-weight:500;}
+
 #iframeView {position:absolute; top:0; left:0; width:100%; height:100%; border:none; display:none; z-index:10; background:white;}
+
+#creditsView {
+  display:none; position:absolute; top:0; left:0; width:100%; height:100%;
+  background: rgba(0,0,0,0.95); color:white; z-index:15;
+  overflow:auto; padding:50px; box-sizing:border-box; transition: opacity 0.3s ease;
+}
+#creditsView h1 { font-size: 36px; margin-bottom:20px;}
+#creditsView ul { margin-left:20px; }
+#creditsView button { position:absolute; top:20px; right:20px; padding:10px 15px; font-size:16px; border:none; border-radius:10px; background:#f43f5e; color:white; cursor:pointer;}
+
 #dock {
   position: fixed; bottom:30px; left:50%; transform:translateX(-50%);
   display:flex; gap:20px; align-items:flex-end; padding:15px 25px;
   border-radius:40px; background: rgba(255,255,255,0.15); backdrop-filter: blur(25px);
-  box-shadow:0 10px 40px rgba(0,0,0,0.4); z-index:10; cursor:grab; transition:all 0.3s ease;
+  box-shadow:0 10px 40px rgba(0,0,0,0.4); z-index:10;
+  overflow-x:auto; scroll-behavior: smooth;
 }
-#dock:active { cursor:grabbing; }
-.dock-app { width:70px; height:70px; background: rgba(255,255,255,0.9); border-radius:20px;
+#dock::-webkit-scrollbar {height:10px;}
+#dock::-webkit-scrollbar-thumb {background:rgba(255,255,255,0.5); border-radius:5px;}
+.dock-app { flex:0 0 auto; width:70px; height:70px; border-radius:20px;
   display:flex; justify-content:center; align-items:center; font-size:30px; color:#333; cursor:pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease; position:relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease; position:relative;
 }
-.dock-app:hover { transform: scale(1.7); box-shadow:0 20px 50px rgba(0,0,0,0.6), 0 0 20px rgba(255,255,255,0.4);}
+.dock-app:hover { transform: scale(1.3); box-shadow:0 15px 40px rgba(0,0,0,0.5);}
 .dock-app::after {content: attr(title); position:absolute; bottom:90px; white-space:nowrap;
   font-size:14px; background:rgba(0,0,0,0.7); color:white; padding:3px 8px;
   border-radius:8px; opacity:0; pointer-events:none; transition:opacity 0.3s ease, transform 0.3s ease;
@@ -54,9 +70,16 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
 .dock-app:hover::after { opacity:1; transform:translateY(0); }
 .dock-app img { width:48px; height:48px; pointer-events:none; object-fit:contain; }
 
-/* Small Settings Button */
-#settingsBtn { position: fixed; bottom:20px; left:20px; width:50px; height:50px;
-  border-radius:50%; background: rgba(255,255,255,0.2); border:none; color:white; font-size:24px; cursor:pointer; display:none; z-index:25;}
+/* App icon backgrounds */
+.app-light { background: rgba(255,255,255,0.9); }
+.app-mirror { background: rgba(255,255,255,0.3); backdrop-filter: blur(5px); }
+.app-black { background: rgba(0,0,0,0.7); }
+
+/* Small Home button */
+#homeBtn {
+  position: fixed; bottom:20px; left:20px; width:50px; height:50px;
+  border-radius:50%; background: rgba(255,255,255,0.2); border:none; color:white; font-size:24px; cursor:pointer; display:none; z-index:25;
+}
 </style>
 </head>
 <body>
@@ -77,7 +100,7 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
   </h2>
   <label>Timezone:
     <select id="timezoneSelect">
-      <option value="America/Chicago" selected>Anna, Texas</option>
+      <option value="America/Chicago">Anna, Texas</option>
       <option value="UTC">UTC</option>
       <option value="America/New_York">New York</option>
       <option value="Europe/London">London</option>
@@ -87,42 +110,75 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
   <label>Clock Format:
     <select id="formatSelect">
       <option value="12">12-hour</option>
-      <option value="24" selected>24-hour</option>
+      <option value="24">24-hour</option>
     </select>
   </label>
   <label>Clock Style:
     <select id="styleSelect">
-      <option value="digital" selected>Digital</option>
+      <option value="digital">Digital</option>
       <option value="analog">Analog</option>
     </select>
   </label>
   <label>Background:
     <select id="backgroundSelect">
-      <option value="digitalLandscape" selected>Digital Landscape</option>
+      <option value="digitalLandscape">Digital Landscape</option>
       <option value="gradient1">Gradient 1</option>
       <option value="gradient2">Gradient 2</option>
       <option value="gradient3">Gradient 3</option>
+    </select>
+  </label>
+  <label>App Icon Style:
+    <select id="appStyleSelect">
+      <option value="light">Light</option>
+      <option value="mirror">Mirror</option>
+      <option value="black">Black</option>
     </select>
   </label>
 </div>
 
 <iframe id="iframeView"></iframe>
 
+<div id="creditsView">
+  <h1>Credits</h1>
+  <p>Special thanks to everyone who contributed:</p>
+  <ul>
+    <li>Emilio – SVG design</li>
+    <li>Tsukki – Concept and Implementation</li>
+  </ul>
+  <p>Made using HTML, CSS, and JavaScript.</p>
+  <button id="closeCredits">Close</button>
+</div>
+
 <div id="dock">
-  <div class="dock-app" data-url="home" title="Home">🏠</div>
-  <div class="dock-app" data-url="https://example.org/?app=1" title="Browser">🌐</div>
-  <div class="dock-app" data-url="https://example.org/?app=2" title="Mail">📧</div>
-  <div class="dock-app" data-url="https://skribbl.io" title="Skribbl">
+  <div class="dock-app app-light" data-url="home" title="Home">
+    <img src="OptionToAddImageHere" alt="Home">
+  </div>
+  <div class="dock-app app-light" data-url="https://example.com/?app=1" title="Browser">
+    <img src="OptionToAddImageHere" alt="Browser">
+  </div>
+  <div class="dock-app app-light" data-url="https://example.com/?app=2" title="Mail">
+    <img src="OptionToAddImageHere" alt="Mail">
+  </div>
+  <div class="dock-app app-light" data-url="https://skribbl.io" title="Skribbl">
     <img src="https://skribbl.io/img/thumbnail.png" alt="Skribbl Logo">
+  </div>
+  <div class="dock-app app-light" data-url="https://example.com/?app=3" title="Music">
+    <img src="OptionToAddImageHere" alt="Music">
+  </div>
+  <div class="dock-app app-light" data-url="https://example.com/?app=4" title="Photos">
+    <img src="OptionToAddImageHere" alt="Photos">
+  </div>
+  <div class="dock-app app-light" data-url="https://example.com/?app=5" title="Settings">
+    <img src="OptionToAddImageHere" alt="Settings">
+  </div>
+  <div class="dock-app app-light" data-url="credits" title="Credits">
+    <img src="OptionToAddImageHere" alt="Credits">
   </div>
 </div>
 
-<button id="settingsBtn">⚙️</button>
+<button id="homeBtn">🏠</button>
 
 <script>
-
-alert("Welcome to TokiMate! 🌟\nAn ongoing project by Tsukki. Enjoy your time here!");
-
 const clock = document.getElementById('clock');
 const analogClock = document.getElementById('analogClock');
 const hourHand = analogClock.querySelector('.hourHand');
@@ -135,13 +191,37 @@ const timezoneSelect = document.getElementById('timezoneSelect');
 const formatSelect = document.getElementById('formatSelect');
 const styleSelect = document.getElementById('styleSelect');
 const backgroundSelect = document.getElementById('backgroundSelect');
+const appStyleSelect = document.getElementById('appStyleSelect');
 const iframeView = document.getElementById('iframeView');
 const dock = document.getElementById('dock');
 const dockApps = document.querySelectorAll('.dock-app');
-const settingsBtn = document.getElementById('settingsBtn');
+const homeBtn = document.getElementById('homeBtn');
+const creditsView = document.getElementById('creditsView');
+const closeCreditsBtn = document.getElementById('closeCredits');
 
-let settings = {timezone:'America/Chicago', format:'24', style:'digital', background:'digitalLandscape'};
+// Default settings
+let settings = {
+  timezone:'America/Chicago',
+  format:'24',
+  style:'digital',
+  background:'digitalLandscape',
+  appStyle:'light'
+};
 
+// Load saved settings from localStorage
+const savedSettings = localStorage.getItem('desktopSettings');
+if(savedSettings){
+  settings = {...settings, ...JSON.parse(savedSettings)};
+}
+
+// Apply settings to UI
+timezoneSelect.value = settings.timezone;
+formatSelect.value = settings.format;
+styleSelect.value = settings.style;
+backgroundSelect.value = settings.background;
+appStyleSelect.value = settings.appStyle;
+
+// Functions
 function updateClock(){
   const now = new Date();
   const options = {timeZone:settings.timezone,hour12:settings.format==='12',hour:'2-digit',minute:'2-digit',second:'2-digit'};
@@ -154,16 +234,6 @@ function updateClock(){
 }
 setInterval(updateClock,1000); updateClock();
 
-clockContainer.addEventListener('click',()=>{settingsPanel.classList.toggle('active');});
-
-timezoneSelect.addEventListener('change',()=>{settings.timezone=timezoneSelect.value;updateClock();});
-formatSelect.addEventListener('change',()=>{settings.format=formatSelect.value;updateClock();});
-styleSelect.addEventListener('change',()=>{
-  settings.style = styleSelect.value;
-  if(settings.style==='digital'){clock.style.display='block';analogClock.style.display='none';}
-  else{clock.style.display='none';analogClock.style.display='block';}
-});
-backgroundSelect.addEventListener('change',()=>{settings.background=backgroundSelect.value;applyBackground();});
 function applyBackground(){
   if(settings.background==='gradient1'){document.body.style.background='linear-gradient(270deg,#4f46e5,#3b82f6,#f43f5e,#f97316)';}
   else if(settings.background==='gradient2'){document.body.style.background='linear-gradient(270deg,#10b981,#3b82f6,#facc15,#f97316)';}
@@ -171,6 +241,54 @@ function applyBackground(){
   else if(settings.background==='digitalLandscape'){document.body.style.background='url("https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/de917977268563.5c829061be1d3.gif") center/cover no-repeat';}
 }
 
+// Apply app style
+dockApps.forEach(app=>{
+  app.classList.remove('app-light','app-mirror','app-black');
+  app.classList.add(`app-${settings.appStyle}`);
+});
+
+// Clock style
+if(settings.style==='digital'){clock.style.display='block'; analogClock.style.display='none';}
+else{clock.style.display='none'; analogClock.style.display='block';}
+
+// Apply background
+applyBackground();
+
+// Event listeners
+function saveSettings(){ localStorage.setItem('desktopSettings', JSON.stringify(settings)); }
+
+clockContainer.addEventListener('click',()=>{settingsPanel.classList.toggle('active');});
+timezoneSelect.addEventListener('change',()=>{
+  settings.timezone = timezoneSelect.value;
+  updateClock();
+  saveSettings();
+});
+formatSelect.addEventListener('change',()=>{
+  settings.format = formatSelect.value;
+  updateClock();
+  saveSettings();
+});
+styleSelect.addEventListener('change',()=>{
+  settings.style = styleSelect.value;
+  if(settings.style==='digital'){clock.style.display='block'; analogClock.style.display='none';}
+  else{clock.style.display='none'; analogClock.style.display='block';}
+  saveSettings();
+});
+backgroundSelect.addEventListener('change',()=>{
+  settings.background = backgroundSelect.value;
+  applyBackground();
+  saveSettings();
+});
+appStyleSelect.addEventListener('change',()=>{
+  settings.appStyle = appStyleSelect.value;
+  dockApps.forEach(app=>{
+    app.classList.remove('app-light','app-mirror','app-black');
+    app.classList.add(`app-${settings.appStyle}`);
+  });
+  saveSettings();
+});
+
+// Dock drag logic
 let isDragging=false, offsetX=0, offsetY=0;
 dock.addEventListener('mousedown', (e)=>{
   if(iframeView.style.display==='block'){isDragging=true; offsetX=e.clientX-dock.offsetLeft; offsetY=e.clientY-dock.offsetTop; dock.style.transition='none';}
@@ -178,16 +296,26 @@ dock.addEventListener('mousedown', (e)=>{
 document.addEventListener('mousemove', (e)=>{if(isDragging){dock.style.left=`${e.clientX-offsetX}px`; dock.style.top=`${e.clientY-offsetY}px`; dock.style.transform='none';}});
 document.addEventListener('mouseup', ()=>{if(isDragging){isDragging=false; dock.style.transition='all 0.3s ease';}});
 
-function enterIframe(url){ iframeView.src=url; iframeView.style.display='block'; dock.style.display='none'; settingsBtn.style.display='block'; }
-function exitIframe(){ iframeView.src=''; iframeView.style.display='none'; dock.style.display='flex'; settingsBtn.style.display='none'; }
+function enterIframe(url){ iframeView.src=url; iframeView.style.display='block'; dock.style.display='none'; creditsView.style.display='none'; homeBtn.style.display='block'; }
+function exitIframe(){ iframeView.src=''; iframeView.style.display='none'; dock.style.display='flex'; homeBtn.style.display='none'; }
+
+function enterCredits(){ creditsView.style.display='block'; dock.style.display='none'; iframeView.style.display='none'; homeBtn.style.display='block'; }
+function exitCredits(){ creditsView.style.display='none'; dock.style.display='flex'; homeBtn.style.display='none'; }
+
+closeCreditsBtn.addEventListener('click', exitCredits);
 
 dockApps.forEach(app=>{
   app.addEventListener('click', ()=>{
-    if(app.dataset.url==='home'){ exitIframe(); } else { enterIframe(app.dataset.url); }
+    if(app.dataset.url==='home'){ exitIframe(); exitCredits(); }
+    else if(app.dataset.url==='credits'){ enterCredits(); }
+    else{ enterIframe(app.dataset.url); }
   });
 });
 
-settingsBtn.addEventListener('click',()=>{settingsPanel.classList.toggle('active');});
+homeBtn.addEventListener('click', ()=>{
+  exitIframe();
+  exitCredits();
+});
 </script>
 </body>
 </html>
