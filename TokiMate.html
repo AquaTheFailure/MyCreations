@@ -12,17 +12,20 @@ html, body {height:100%; overflow:hidden;}
 body {
   background: url("https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/de917977268563.5c829061be1d3.gif") center/cover no-repeat;
   display:flex; justify-content:center; align-items:center; flex-direction:column;
-  color:white; transition:background 0.5s;
+  color:white; transition:background 0.5s, opacity 1s ease-in-out;
+  opacity: 0;
 }
 
 #clockContainer {
   position: relative; cursor:pointer; padding:50px 80px; border-radius:40px;
   background: rgba(255,255,255,0.1); backdrop-filter: blur(20px);
   box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-  display:flex; justify-content:center; align-items:center; transition: transform 0.3s;
+  display:flex; flex-direction:column; justify-content:center; align-items:center; transition: transform 0.3s;
 }
 #clockContainer:hover {transform:scale(1.05);}
 #clock {font-size:100px; font-weight:700; text-shadow:0 0 20px rgba(0,0,0,0.5),0 0 10px rgba(255,255,255,0.2);}
+#welcomeName {margin-top:10px; font-size:24px; font-weight:500; opacity:0.85; text-shadow:0 0 10px rgba(0,0,0,0.3);}
+
 #analogClock {display:none; position:relative; width:220px; height:220px; border:10px solid rgba(255,255,255,0.6); border-radius:50%; background: rgba(255,255,255,0.05); box-shadow:0 0 40px rgba(255,255,255,0.2) inset;}
 .hand {position:absolute; width:50%; height:4px; background:white; top:50%; transform-origin:100%; transform:rotate(90deg); transition: transform 0.5s ease-in-out;}
 .hourHand {height:6px;} .minuteHand {height:4px;} .secondHand {height:2px; background:#f43f5e;}
@@ -54,21 +57,14 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
   display:flex; gap:20px; align-items:flex-end; padding:15px 25px;
   border-radius:40px; background: rgba(255,255,255,0.15); backdrop-filter: blur(25px);
   box-shadow:0 10px 40px rgba(0,0,0,0.4); z-index:10;
-  overflow-x:auto; scroll-behavior: smooth;
 }
-#dock::-webkit-scrollbar {height:10px;}
-#dock::-webkit-scrollbar-thumb {background:rgba(255,255,255,0.5); border-radius:5px;}
 .dock-app { flex:0 0 auto; width:70px; height:70px; border-radius:20px;
-  display:flex; justify-content:center; align-items:center; font-size:30px; color:#333; cursor:pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease; position:relative;
+  display:flex; flex-direction:column; justify-content:center; align-items:center; font-size:30px; color:#333; cursor:pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease; position:relative;
 }
-.dock-app:hover { transform: scale(1.3); box-shadow:0 15px 40px rgba(0,0,0,0.5);}
-.dock-app::after {content: attr(title); position:absolute; bottom:90px; white-space:nowrap;
-  font-size:14px; background:rgba(0,0,0,0.7); color:white; padding:3px 8px;
-  border-radius:8px; opacity:0; pointer-events:none; transition:opacity 0.3s ease, transform 0.3s ease;
-  transform:translateY(10px);}
-.dock-app:hover::after { opacity:1; transform:translateY(0); }
+.dock-app:hover { transform: scale(1.08); box-shadow:0 10px 25px rgba(0,0,0,0.4);}
 .dock-app img { width:48px; height:48px; pointer-events:none; object-fit:contain; }
+.dock-label { font-size:13px; color:white; opacity:0.9; margin-top:5px; text-shadow:0 1px 5px rgba(0,0,0,0.3); }
 
 /* App icon backgrounds */
 .app-light { background: rgba(255,255,255,0.9); }
@@ -80,6 +76,34 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
   position: fixed; bottom:20px; left:20px; width:50px; height:50px;
   border-radius:50%; background: rgba(255,255,255,0.2); border:none; color:white; font-size:24px; cursor:pointer; display:none; z-index:25;
 }
+
+/* Name prompt modal */
+#namePrompt {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+  display:flex; justify-content:center; align-items:center; z-index:50;
+}
+#nameBox {
+  background: rgba(255,255,255,0.15); padding:40px; border-radius:30px;
+  backdrop-filter: blur(20px); text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.4);
+}
+#nameBox h2 {margin-bottom:15px; color:white;}
+#nameInput {padding:10px 15px; border:none; border-radius:10px; width:80%; font-size:16px; margin-bottom:15px;}
+#saveNameBtn {padding:10px 20px; border:none; border-radius:10px; background:#4f46e5; color:white; cursor:pointer;}
+
+/* Spotlight search */
+#searchContainer {
+  position:fixed;top:30px;left:50%;transform:translateX(-50%);z-index:50;width:400px;
+}
+#appSearch {
+  width:100%;padding:10px 15px;border-radius:20px;border:none;font-size:16px;outline:none;
+  box-shadow:0 5px 20px rgba(0,0,0,0.3);backdrop-filter: blur(10px);background:rgba(255,255,255,0.15);color:white;
+}
+#searchSuggestions {
+  margin-top:5px;background:rgba(0,0,0,0.7);border-radius:10px;display:none;max-height:200px;overflow-y:auto;
+}
+#searchSuggestions div {padding:8px 12px;cursor:pointer;color:white;}
+#searchSuggestions div:hover {background:rgba(255,255,255,0.2);}
 </style>
 </head>
 <body>
@@ -90,6 +114,17 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
     <div class="hand hourHand"></div>
     <div class="hand minuteHand"></div>
     <div class="hand secondHand"></div>
+  </div>
+  <div id="welcomeName"></div>
+</div>
+
+<!-- Name prompt -->
+<div id="namePrompt" style="display:none;">
+  <div id="nameBox">
+    <h2>Welcome! What's your name?</h2>
+    <input type="text" id="nameInput" placeholder="Enter your name">
+    <br>
+    <button id="saveNameBtn">Save</button>
   </div>
 </div>
 
@@ -145,177 +180,233 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
     <li>Emilio – SVG design</li>
     <li>Tsukki – Concept and Implementation</li>
   </ul>
-  <p>Made using HTML, CSS, and JavaScript.</p>
+  <p>Made using HTML, CSS, and JavaScript. <br><br> Please Reload After Closing This.</p>
   <button id="closeCredits">Close</button>
 </div>
 
+<!-- Spotlight Search -->
+<div id="searchContainer">
+  <input type="text" id="appSearch" placeholder="Type to search apps...">
+  <div id="searchSuggestions"></div>
+</div>
+
+<!-- Bottom dock -->
 <div id="dock">
-  <div class="dock-app app-light" data-url="https://retrobowl.org/" title="Retro Bowl">
-    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAABLFBMVEU+iUg+ikg+hEY+i0k6UjI+SS1AVzI+e0JFWzONaBVeIg0/AA9BFBc+ZTlOHxm+jgiGTxpZHCJYHh9DJyE/ajtFExhZKQqhaEbJkGCzi1YzABK5hxbvvDbBmmU+h0c7hEVMVDBPQCdQEhU6ABK0gSbasjmQpS5akz9wkzt+VRh3LAtjCBBeFBRGAAuTXEXLmEHkswDVrAZ+iSw2hkH0xQu0fBNcABFxJRxLChtwHR1XYTfqrk2pbjNUAAC1flK/fVB+hEzZoWXiqWmkcUyRlleqmVy1f1R4RzdxkVHepmkpABBVcUZlNyWITE7AoKDOurm9q6+2qJ6ecXPx5+n////x+vWVuppbmGOFZlzc6d1+sYZjg1icenOAUk0ycTuBo4aWspszeD1LfVIsdDae9998AAABIElEQVR4AXTRU4LEQBQF0LZtV49n2rZtxk72v4fRX6cq9/cUHnQP0et1mjH8RoOMBpPZbDEYkWi12R1Ol8WKvOj2eH3+QDBkRGI4Eo3FrQaUGd2uRDKVziAM2LJPzy+vqbf3Dxg/v3L5QrFUrlRrUEX1RqXZyrcDnVa324Ne7vcHw3x0VPJExxPo2ek0NhpNZ/NgbLaAcJme/ma1dkXjGwgzy+12O1vvEoU9Ygh1y7DVCocPyNlmssfT+XK5GvRIvN0xDMMJEqVu6ozRNIYzddSme8c7wWig0d2+M9pYuLHsjWPhcvUA7Pnjfn/k9wCoSwKCIOKYKGK4FBKACoVfpP+RFgVBhbIgKKKkKJIksYKsnoEsyz9LTgZiECHHQCkAAFTUOUa5tqPzAAAAAElFTkSuQmCC" alt="Home">
-  </div>
-  <div class="dock-app app-light" data-url="https://example.com/?app=1" title="Browser">
-    <img src="OptionToAddImageHere" alt="Browser">
-  </div>
-  <div class="dock-app app-light" data-url="https://example.com/?app=2" title="Mail">
-    <img src="OptionToAddImageHere" alt="Mail">
-  </div>
-  <div class="dock-app app-light" data-url="https://skribbl.io" title="Skribbl">
-    <img src="https://skribbl.io/img/thumbnail.png" alt="Skribbl Logo">
-  </div>
-  <div class="dock-app app-light" data-url="https://example.com/?app=3" title="Music">
-    <img src="OptionToAddImageHere" alt="Music">
-  </div>
-  <div class="dock-app app-light" data-url="https://example.com/?app=4" title="Photos">
-    <img src="OptionToAddImageHere" alt="Photos">
-  </div>
-  <div class="dock-app app-light" data-url="https://example.com/?app=5" title="Settings">
-    <img src="OptionToAddImageHere" alt="Settings">
-  </div>
-  <div class="dock-app app-light" data-url="credits" title="Credits">
-    <img src="OptionToAddImageHere" alt="Credits">
-  </div>
+  <div class="dock-app app-light" data-app="Browser" data-url="TokiMate://Browser" title="Browser">🖥️</div>
+  <div class="dock-app app-light" data-app="Mail" data-url="TokiMate://Mail" title="Mail">📧</div>
+  <div class="dock-app app-light" data-app="Music" data-url="TokiMate://Music" title="Music">🎵</div>
+  <div class="dock-app app-light" data-app="Photos" data-url="TokiMate://Photos" title="Photos">📸</div>
+  <div class="dock-app app-light" data-app="Skribbl" data-url="TokiMate://Skribbl" title="Skribbl">🎨</div>
+  <div class="dock-app app-light" data-app="Credits" data-url="credits" title="Credits">ℹ️</div>
 </div>
 
 <button id="homeBtn">🏠</button>
 
 <script>
-const clock = document.getElementById('clock');
-const analogClock = document.getElementById('analogClock');
-const hourHand = analogClock.querySelector('.hourHand');
-const minuteHand = analogClock.querySelector('.minuteHand');
-const secondHand = analogClock.querySelector('.secondHand');
+window.addEventListener('load', () => document.body.style.opacity = '1');
 
-const clockContainer = document.getElementById('clockContainer');
-const settingsPanel = document.getElementById('settingsPanel');
-const timezoneSelect = document.getElementById('timezoneSelect');
-const formatSelect = document.getElementById('formatSelect');
-const styleSelect = document.getElementById('styleSelect');
-const backgroundSelect = document.getElementById('backgroundSelect');
-const appStyleSelect = document.getElementById('appStyleSelect');
-const iframeView = document.getElementById('iframeView');
-const dock = document.getElementById('dock');
-const dockApps = document.querySelectorAll('.dock-app');
-const homeBtn = document.getElementById('homeBtn');
-const creditsView = document.getElementById('creditsView');
-const closeCreditsBtn = document.getElementById('closeCredits');
+// Clock and Analog Hands
+const clock=document.getElementById('clock');
+const analogClock=document.getElementById('analogClock');
+const hourHand=analogClock.querySelector('.hourHand');
+const minuteHand=analogClock.querySelector('.minuteHand');
+const secondHand=analogClock.querySelector('.secondHand');
 
-// Default settings
-let settings = {
-  timezone:'America/Chicago',
-  format:'24',
-  style:'digital',
-  background:'digitalLandscape',
-  appStyle:'light'
-};
+const clockContainer=document.getElementById('clockContainer');
+const settingsPanel=document.getElementById('settingsPanel');
+const timezoneSelect=document.getElementById('timezoneSelect');
+const formatSelect=document.getElementById('formatSelect');
+const styleSelect=document.getElementById('styleSelect');
+const backgroundSelect=document.getElementById('backgroundSelect');
+const appStyleSelect=document.getElementById('appStyleSelect');
+const iframeView=document.getElementById('iframeView');
+const dock=document.getElementById('dock');
+const dockApps=document.querySelectorAll('.dock-app');
+const homeBtn=document.getElementById('homeBtn');
+const creditsView=document.getElementById('creditsView');
+const closeCreditsBtn=document.getElementById('closeCredits');
+const welcomeName=document.getElementById('welcomeName');
+const namePrompt=document.getElementById('namePrompt');
+const nameInput=document.getElementById('nameInput');
+const saveNameBtn=document.getElementById('saveNameBtn');
 
-// Load saved settings from localStorage
-const savedSettings = localStorage.getItem('desktopSettings');
-if(savedSettings){
-  settings = {...settings, ...JSON.parse(savedSettings)};
-}
+let userName=localStorage.getItem('userName');
+if(!userName){namePrompt.style.display='flex';}else{welcomeName.textContent=`Welcome, ${userName}!`;}
 
-// Apply settings to UI
-timezoneSelect.value = settings.timezone;
-formatSelect.value = settings.format;
-styleSelect.value = settings.style;
-backgroundSelect.value = settings.background;
-appStyleSelect.value = settings.appStyle;
+saveNameBtn.addEventListener('click',()=>{
+  const val=nameInput.value.trim();
+  if(val){localStorage.setItem('userName',val);userName=val;welcomeName.textContent=`Welcome, ${userName}!`;namePrompt.style.display='none';}
+});
 
-// Functions
+// Settings
+let settings={timezone:'America/Chicago',format:'24',style:'digital',background:'digitalLandscape',appStyle:'light'};
+const savedSettings=localStorage.getItem('desktopSettings');if(savedSettings){settings={...settings,...JSON.parse(savedSettings)};}
+
+timezoneSelect.value=settings.timezone;formatSelect.value=settings.format;styleSelect.value=settings.style;
+backgroundSelect.value=settings.background;appStyleSelect.value=settings.appStyle;
+
 function updateClock(){
-  const now = new Date();
-  const options = {timeZone:settings.timezone,hour12:settings.format==='12',hour:'2-digit',minute:'2-digit',second:'2-digit'};
-  clock.textContent = now.toLocaleTimeString('en-US',options);
-  const nowAnalog = new Date(now.toLocaleString('en-US',{timeZone:settings.timezone}));
-  const h = nowAnalog.getHours()%12; const m = nowAnalog.getMinutes(); const s = nowAnalog.getSeconds();
-  hourHand.style.transform = `rotate(${h*30 + m/2}deg)`;
-  minuteHand.style.transform = `rotate(${m*6}deg)`;
-  secondHand.style.transform = `rotate(${s*6}deg)`;
+  const now=new Date();
+  const options={timeZone:settings.timezone,hour12:settings.format==='12',hour:'2-digit',minute:'2-digit',second:'2-digit'};
+  clock.textContent=now.toLocaleTimeString('en-US',options);
+  const local=new Date(now.toLocaleString('en-US',{timeZone:settings.timezone}));
+  const h=local.getHours()%12,m=local.getMinutes(),s=local.getSeconds();
+  hourHand.style.transform=`rotate(${h*30+m/2}deg)`;minuteHand.style.transform=`rotate(${m*6}deg)`;secondHand.style.transform=`rotate(${s*6}deg)`;
 }
-setInterval(updateClock,1000); updateClock();
+setInterval(updateClock,1000);updateClock();
 
-function applyBackground(){
-  if(settings.background==='gradient1'){document.body.style.background='linear-gradient(270deg,#4f46e5,#3b82f6,#f43f5e,#f97316)';}
-  else if(settings.background==='gradient2'){document.body.style.background='linear-gradient(270deg,#10b981,#3b82f6,#facc15,#f97316)';}
-  else if(settings.background==='gradient3'){document.body.style.background='linear-gradient(270deg,#f43f5e,#f97316,#4f46e5,#3b82f6)';}
-  else if(settings.background==='digitalLandscape'){document.body.style.background='url("https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/de917977268563.5c829061be1d3.gif") center/cover no-repeat';}
-}
+const gifBackgrounds = [
+  "https://images.steamusercontent.com/ugc/271725310716427808/FA3288AF961AFFFDC71DB99058354F1159943C09/?imw=5000&imh=5000&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false",
+  "https://windowscustomization.com/wp-content/uploads/2019/02/Wallpaper.gif",
+  "https://windowscustomization.com/wp-content/uploads/2018/12/Anime-And-Scape-Watefal.gif",
+  "https://wallpaperaccess.com/full/9336992.gif"
+];
 
-// Apply app style
-dockApps.forEach(app=>{
-  app.classList.remove('app-light','app-mirror','app-black');
-  app.classList.add(`app-${settings.appStyle}`);
-});
-
-// Clock style
-if(settings.style==='digital'){clock.style.display='block'; analogClock.style.display='none';}
-else{clock.style.display='none'; analogClock.style.display='block';}
-
-// Apply background
-applyBackground();
-
-// Event listeners
-function saveSettings(){ localStorage.setItem('desktopSettings', JSON.stringify(settings)); }
-
-clockContainer.addEventListener('click',()=>{settingsPanel.classList.toggle('active');});
-timezoneSelect.addEventListener('change',()=>{
-  settings.timezone = timezoneSelect.value;
-  updateClock();
-  saveSettings();
-});
-formatSelect.addEventListener('change',()=>{
-  settings.format = formatSelect.value;
-  updateClock();
-  saveSettings();
-});
-styleSelect.addEventListener('change',()=>{
-  settings.style = styleSelect.value;
-  if(settings.style==='digital'){clock.style.display='block'; analogClock.style.display='none';}
-  else{clock.style.display='none'; analogClock.style.display='block';}
-  saveSettings();
-});
-backgroundSelect.addEventListener('change',()=>{
-  settings.background = backgroundSelect.value;
-  applyBackground();
-  saveSettings();
-});
-appStyleSelect.addEventListener('change',()=>{
-  settings.appStyle = appStyleSelect.value;
-  dockApps.forEach(app=>{
+function applySettings(){
+  localStorage.setItem('desktopSettings', JSON.stringify(settings));
+  clock.style.display = settings.style === 'digital' ? 'block' : 'none';
+  analogClock.style.display = settings.style === 'analog' ? 'block' : 'none';
+  const b = settings.background;
+  document.body.style.transition = 'background 0.8s ease-in-out, opacity 0.8s ease-in-out';
+  document.body.style.backgroundAttachment = 'fixed';
+  if (b === 'digitalLandscape') {
+    const randomGif = gifBackgrounds[Math.floor(Math.random() * gifBackgrounds.length)];
+    document.body.style.background = `url('${randomGif}') center/cover no-repeat fixed`;
+  } else if (b === 'gradient1') {
+    document.body.style.background = "linear-gradient(135deg,#667eea,#764ba2)";
+  } else if (b === 'gradient2') {
+    document.body.style.background = "linear-gradient(135deg,#ff9a9e,#fad0c4)";
+  } else if (b === 'gradient3') {
+    document.body.style.background = "linear-gradient(135deg,#43cea2,#185a9d)";
+  }
+  dockApps.forEach(app => {
     app.classList.remove('app-light','app-mirror','app-black');
     app.classList.add(`app-${settings.appStyle}`);
   });
-  saveSettings();
+}
+applySettings();
+
+[timezoneSelect,formatSelect,styleSelect,backgroundSelect,appStyleSelect].forEach(sel=>{
+  sel.addEventListener('change',()=>{settings[sel.id.replace('Select','')]=sel.value;applySettings();});
 });
 
-// Dock drag logic
-let isDragging=false, offsetX=0, offsetY=0;
-dock.addEventListener('mousedown', (e)=>{
-  if(iframeView.style.display==='block'){isDragging=true; offsetX=e.clientX-dock.offsetLeft; offsetY=e.clientY-dock.offsetTop; dock.style.transition='none';}
-});
-document.addEventListener('mousemove', (e)=>{if(isDragging){dock.style.left=`${e.clientX-offsetX}px`; dock.style.top=`${e.clientY-offsetY}px`; dock.style.transform='none';}});
-document.addEventListener('mouseup', ()=>{if(isDragging){isDragging=false; dock.style.transition='all 0.3s ease';}});
+// Apps
+const appSearch=document.getElementById('appSearch');
+const searchSuggestions=document.getElementById('searchSuggestions');
 
-function enterIframe(url){ iframeView.src=url; iframeView.style.display='block'; dock.style.display='none'; creditsView.style.display='none'; homeBtn.style.display='block'; }
-function exitIframe(){ iframeView.src=''; iframeView.style.display='none'; dock.style.display='flex'; homeBtn.style.display='none'; }
+const apps = [
+  {name:'Browser', url:'TokiMate://Browser'},
+  {name:'Mail', url:'TokiMate://Mail'},
+  {name:'Music', url:'TokiMate://Music'},
+  {name:'Photos', url:'TokiMate://Photos'},
+  {name:'Skribbl', url:'TokiMate://Skribbl'},
+  {name:'Credits', url:'credits'}
+];
 
-function enterCredits(){ creditsView.style.display='block'; dock.style.display='none'; iframeView.style.display='none'; homeBtn.style.display='block'; }
-function exitCredits(){ creditsView.style.display='none'; dock.style.display='flex'; homeBtn.style.display='none'; }
+function getAppURL(appName){
+  switch(appName){
+    case 'Browser': return 'https://www.google.com';
+    case 'Mail': return 'https://mail.google.com';
+    case 'Music': return 'https://music.youtube.com';
+    case 'Photos': return 'https://photos.google.com';
+    case 'Skribbl': return 'https://skribbl.io';
+    default: return '';
+  }
+}
 
-closeCreditsBtn.addEventListener('click', exitCredits);
+function openApp(url){
+  if(url==='credits'){
+    creditsView.style.display='block';
+    dock.style.display = 'none';
+    clockContainer.style.display = 'none';
+    settingsPanel.style.display = 'none';
+    appSearch.parentElement.style.display = 'none';
+    homeBtn.style.display='block';
+    return;
+  }
+  if(url.startsWith('TokiMate://')){
+    const appName = url.replace('TokiMate://','');
+    const appData = apps.find(a=>a.name===appName);
+    if(appData){
+      iframeView.src = getAppURL(appName);
+      iframeView.style.display='block';
+      homeBtn.style.display='block';
+      dock.style.display = 'none';
+      clockContainer.style.display = 'none';
+      settingsPanel.style.display = 'none';
+      appSearch.parentElement.style.display = 'none';
+    }
+  }
+}
 
+// Dock clicks
 dockApps.forEach(app=>{
-  app.addEventListener('click', ()=>{
-    if(app.dataset.url==='home'){ exitIframe(); exitCredits(); }
-    else if(app.dataset.url==='credits'){ enterCredits(); }
-    else{ enterIframe(app.dataset.url); }
-  });
+  app.addEventListener('click',()=>openApp(app.dataset.url));
 });
 
-homeBtn.addEventListener('click', ()=>{
-  exitIframe();
-  exitCredits();
+// Home button restores everything
+homeBtn.addEventListener('click',()=>{
+  iframeView.style.display='none';
+  homeBtn.style.display='none';
+  dock.style.display = 'flex';
+  clockContainer.style.display = 'flex';
+  appSearch.parentElement.style.display = 'block';
 });
+
+// Credits close
+closeCreditsBtn.addEventListener('click', () => {
+    creditsView.style.display = 'none';
+    // Restore main UI elements
+    clockContainer.style.display = 'flex';
+    dock.style.display = 'flex';
+    searchContainer.style.display = 'block';
+    iframeView.style.display = 'none';
+    homeBtn.style.display = 'none';
+});
+
+// Settings toggle
+clockContainer.addEventListener('click', () => {
+    // Only toggle settings if iframe is not open
+    if (iframeView.style.display !== 'block') {
+        settingsPanel.classList.toggle('active');
+    }
+});
+
+// Spotlight search
+appSearch.addEventListener('input', () => {
+  const val = appSearch.value.toLowerCase().trim();
+  searchSuggestions.innerHTML = '';
+  if(val.length === 0){searchSuggestions.style.display='none'; return;}
+  
+  const filtered = apps.filter(app => app.name.toLowerCase().includes(val));
+  if(filtered.length === 0){searchSuggestions.style.display='none'; return;}
+  
+  filtered.forEach(app => {
+    const div = document.createElement('div');
+    div.textContent = app.name;
+    div.addEventListener('click', () => {
+      // Autofill with TokiMate:// prefix
+      appSearch.value = `TokiMate://${app.name}`;
+      searchSuggestions.style.display='none';
+    });
+    searchSuggestions.appendChild(div);
+  });
+  searchSuggestions.style.display='block';
+});
+
+appSearch.addEventListener('keydown', e => {
+  if(e.key==='Enter'){
+    const val = appSearch.value.trim();
+    // Only open if starts with TokiMate://
+    if(val.startsWith('TokiMate://')){
+      const appName = val.replace('TokiMate://','');
+      const match = apps.find(a=>a.name.toLowerCase()===appName.toLowerCase());
+      if(match) openApp(match.url);
+    }
+    searchSuggestions.style.display='none';
+  }
+});
+
 </script>
 </body>
 </html>
