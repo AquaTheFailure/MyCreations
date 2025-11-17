@@ -75,6 +75,43 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
 #homeBtn {
   position: fixed; bottom:20px; left:20px; width:50px; height:50px;
   border-radius:50%; background: rgba(255,255,255,0.2); border:none; color:white; font-size:24px; cursor:pointer; display:none; z-index:25;
+  display:none; overflow:visible;
+  transition: transform .25s cubic-bezier(.2,.9,.2,1), box-shadow .25s ease, background-color .25s ease;
+  will-change: transform, box-shadow;
+}
+#homeBtn img { transition: transform .25s ease; display:block; width:28px; height:28px; margin:auto; }
+
+#homeBtn:hover{
+  transform: translateY(-6px) scale(1.08);
+  box-shadow: 0 12px 30px rgba(79,70,229,0.18), 0 4px 10px rgba(0,0,0,0.35), 0 0 14px rgba(244,63,94,0.10);
+  background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.12));
+}
+#homeBtn:hover img{ transform: rotate(-8deg) scale(1.04); }
+
+/* Subtle glowing ring animation */
+#homeBtn::after{
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 90%; height: 90%;
+  transform: translate(-50%,-50%) scale(1);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(circle at center, rgba(79,70,229,0.18) 0%, rgba(244,63,94,0.06) 35%, transparent 60%);
+  opacity: 0;
+  transition: opacity .25s ease, transform .4s ease;
+}
+#homeBtn:hover::after{
+  opacity: 1;
+  transform: translate(-50%,-50%) scale(1.45);
+  animation: pulseRing 900ms ease-out;
+}
+
+@keyframes pulseRing {
+  0%   { transform: translate(-50%,-50%) scale(1);   opacity: .9;  }
+  60%  { transform: translate(-50%,-50%) scale(1.9); opacity: .18; }
+  100% { transform: translate(-50%,-50%) scale(2.6); opacity: 0;   }
 }
 
 /* Name prompt modal */
@@ -194,13 +231,19 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
 <div id="dock">
   <div class="dock-app app-light" data-app="Browser" data-url="TokiMate://Browser" title="Browser">🖥️</div>
   <div class="dock-app app-light" data-app="Mail" data-url="TokiMate://Mail" title="Mail">📧</div>
-  <div class="dock-app app-light" data-app="Music" data-url="TokiMate://Music" title="Music">🎵</div>
+  <div class="dock-app app-light" data-app="Music" data-url="TokiMate://Music" title="Music">
+    <img src="file:///home/Slimee5661/Documents/Aqua%20The%20Failure/Icons/music_player.svg" alt="Music" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+  </div>
   <div class="dock-app app-light" data-app="Photos" data-url="TokiMate://Photos" title="Photos">📸</div>
-  <div class="dock-app app-light" data-app="Skribbl" data-url="TokiMate://Skribbl" title="Skribbl">🎨</div>
+  <div class="dock-app app-light" data-app="Skribbl" data-url="TokiMate://Skribbl" title="Skribbl">
+    <img src="file:///home/Slimee5661/Documents/Aqua The Failure/Icons/Skribbl_icon.svg" alt="Skribbl" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+  </div>
   <div class="dock-app app-light" data-app="Credits" data-url="credits" title="Credits">ℹ️</div>
 </div>
 
-<button id="homeBtn">🏠</button>
+<button id="homeBtn" title="Home">
+  <img src="file:///home/Slimee5661/Documents/Aqua The Failure/Icons/Home_icon.svg" alt="Home" style="width:28px;height:28px;display:block;margin:auto;">
+</button></button>
 
 <script>
 window.addEventListener('load', () => document.body.style.opacity = '1');
@@ -307,7 +350,8 @@ function getAppURL(appName){
   switch(appName){
     case 'Browser': return 'https://www.google.com';
     case 'Mail': return 'https://mail.google.com';
-    case 'Music': return 'https://music.youtube.com';
+    // Open local mp3.html instead of redirecting to music.youtube.com
+    case 'Music': return 'file:///home/Slimee5661/Documents/Aqua%20The%20Failure/Resources/mp3.html';
     case 'Photos': return 'https://photos.google.com';
     case 'Skribbl': return 'https://skribbl.io';
     default: return '';
