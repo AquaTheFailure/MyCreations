@@ -35,22 +35,22 @@
     "url": "https://deadshot.io"
   },
   {
-    "name": "Retro Bowl",
+    "name": "RetroBowl",
     "redirect": "TokiMate://RetroBowl",
     "url": "https://2games.io/game/retro-bowl/"
   },
   {
-    "name": "Retro Bowl College",
+    "name": "RetroBowlCollege",
     "redirect": "TokiMate://RetroBowlCollege",
     "url": "https://retro-bowl-college.com/"
   },
   {
-    "name": "Resident Evil Gaiden",
+    "name": "ResidentEvilGaiden",
     "redirect": "TokiMate://ResidentEvilGaiden",
     "url": "https://www.retrogames.cc/gameboycolor-games/resident-evil-gaiden-usa.html"
   },
   {
-    "name": "Grand Theft Auto 2",
+    "name": "GrandTheftAuto2",
     "redirect": "TokiMate://GrandTheftAuto2",
     "url": "https://retroonline.net/Windows/Grand%20Theft%20Auto%202"
   }
