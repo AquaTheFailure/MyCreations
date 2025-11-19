@@ -28,5 +28,10 @@
     "name": "Credits",
     "redirect": "credits",
     "url": ""
+  },
+  {
+    "name": "Deadshot",
+    "redirect": "TokiMate://Deadshot",
+    "url": "https://deadshot.io"
   }
 ]
