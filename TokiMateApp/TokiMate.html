@@ -139,8 +139,32 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
 #searchSuggestions {
   margin-top:5px;background:rgba(0,0,0,0.7);border-radius:10px;display:none;max-height:200px;overflow-y:auto;
 }
-#searchSuggestions div {padding:8px 12px;cursor:pointer;color:white;}
+#searchSuggestions div {Padding:8px 12px;cursor:pointer;color:white;}
 #searchSuggestions div:hover {background:rgba(255,255,255,0.2);}
+
+/* Room Code Popup (initially hidden) */
+#roomPrompt {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
+  display: none; justify-content: center; align-items: center;
+  z-index: 100;
+}
+#roomBox {
+  background: rgba(255,255,255,0.15); padding: 35px; border-radius: 25px;
+  backdrop-filter: blur(20px); text-align: center;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+#roomBox h2 { color: white; margin-bottom: 15px; }
+#roomInput {
+  width: 80%; padding: 10px;
+  border-radius: 10px; border: none; margin-bottom: 20px;
+}
+.roomBtn {
+  padding: 10px 20px; border: none; border-radius: 10px;
+  margin: 5px; cursor: pointer; font-weight: 600;
+}
+#joinRoomBtn { background: #4ade80; color: black; }
+#cancelRoomBtn { background: #f87171; color: white; }
 </style>
 </head>
 <body>
@@ -232,18 +256,31 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
   <div class="dock-app app-light" data-app="Browser" data-url="TokiMate://Browser" title="Browser">🖥️</div>
   <div class="dock-app app-light" data-app="Mail" data-url="TokiMate://Mail" title="Mail">📧</div>
   <div class="dock-app app-light" data-app="Music" data-url="TokiMate://Music" title="Music">
-    <img src="file:///home/Slimee5661/Documents/Aqua%20The%20Failure/Icons/music_player.svg" alt="Music" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Icons/music_player.svg" alt="Music" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
   </div>
-  <div class="dock-app app-light" data-app="Photos" data-url="TokiMate://Photos" title="Photos">📸</div>
+  <div class="dock-app app-light" data-app="Photos" data-url="TokiMate://Photos" title="Photos">
+    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Icons/Pictures_icon.svg" alt="Photos" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+  </div>
   <div class="dock-app app-light" data-app="Skribbl" data-url="TokiMate://Skribbl" title="Skribbl">
-    <img src="file:///home/Slimee5661/Documents/Aqua The Failure/Icons/Skribbl_icon.svg" alt="Skribbl" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Icons/Skribbl_icon.svg" alt="Skribbl" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
   </div>
   <div class="dock-app app-light" data-app="Credits" data-url="credits" title="Credits">ℹ️</div>
 </div>
 
 <button id="homeBtn" title="Home">
-  <img src="file:///home/Slimee5661/Documents/Aqua The Failure/Icons/Home_icon.svg" alt="Home" style="width:28px;height:28px;display:block;margin:auto;">
-</button></button>
+  <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Icons/Home_icon.svg" alt="Home" style="width:28px;height:28px;display:block;margin:auto;">
+</button>
+
+<!-- Room Code Prompt -->
+<div id="roomPrompt" style="display:none;">
+  <div id="roomBox">
+    <h2>Join a Skribbl Room</h2>
+    <input id="roomInput" type="text" placeholder="Enter room code (optional)">
+    <br>
+    <button class="roomBtn" id="joinRoomBtn">Join</button>
+    <button class="roomBtn" id="cancelRoomBtn">Cancel</button>
+  </div>
+</div>
 
 <script>
 window.addEventListener('load', () => document.body.style.opacity = '1');
@@ -264,6 +301,7 @@ const backgroundSelect=document.getElementById('backgroundSelect');
 const appStyleSelect=document.getElementById('appStyleSelect');
 const iframeView=document.getElementById('iframeView');
 const dock=document.getElementById('dock');
+// FIX: ensure dockApps is defined before use
 const dockApps=document.querySelectorAll('.dock-app');
 const homeBtn=document.getElementById('homeBtn');
 const creditsView=document.getElementById('creditsView');
@@ -272,6 +310,9 @@ const welcomeName=document.getElementById('welcomeName');
 const namePrompt=document.getElementById('namePrompt');
 const nameInput=document.getElementById('nameInput');
 const saveNameBtn=document.getElementById('saveNameBtn');
+
+const appSearch=document.getElementById('appSearch');
+const searchSuggestions=document.getElementById('searchSuggestions');
 
 let userName=localStorage.getItem('userName');
 if(!userName){namePrompt.style.display='flex';}else{welcomeName.textContent=`Welcome, ${userName}!`;}
@@ -333,59 +374,55 @@ applySettings();
   sel.addEventListener('change',()=>{settings[sel.id.replace('Select','')]=sel.value;applySettings();});
 });
 
-// Apps
-const appSearch=document.getElementById('appSearch');
-const searchSuggestions=document.getElementById('searchSuggestions');
 
-const apps = [
-  {name:'Browser', url:'TokiMate://Browser'},
-  {name:'Mail', url:'TokiMate://Mail'},
-  {name:'Music', url:'TokiMate://Music'},
-  {name:'Photos', url:'TokiMate://Photos'},
-  {name:'Skribbl', url:'TokiMate://Skribbl'},
-  {name:'Credits', url:'credits'}
-];
+let apps = [];
 
-function getAppURL(appName){
-  switch(appName){
-    case 'Browser': return 'https://www.google.com';
-    case 'Mail': return 'https://mail.google.com';
-    // Open local mp3.html instead of redirecting to music.youtube.com
-    case 'Music': return 'file:///home/Slimee5661/Documents/Aqua%20The%20Failure/Resources/mp3.html';
-    case 'Photos': return 'https://photos.google.com';
-    case 'Skribbl': return 'https://skribbl.io';
-    default: return '';
-  }
+// Load external JSON
+fetch("https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/apps.json")
+  .then(res => res.json())
+  .then(data => apps = data)
+  .catch(err => console.error("Could not load apps.json:", err));
+
+// Return app URL from JSON
+function getAppURL(appName) {
+  const app = apps.find(a => a.name.toLowerCase() === appName.toLowerCase());
+  return app ? app.url : "";
 }
 
-function openApp(url){
-  if(url==='credits'){
-    creditsView.style.display='block';
+// App opener
+function openApp(url) {
+  if (url === 'credits') {
+    creditsView.style.display = 'block';
     dock.style.display = 'none';
     clockContainer.style.display = 'none';
     settingsPanel.style.display = 'none';
     appSearch.parentElement.style.display = 'none';
-    homeBtn.style.display='block';
+    homeBtn.style.display = 'block';
     return;
   }
-  if(url.startsWith('TokiMate://')){
-    const appName = url.replace('TokiMate://','');
-    const appData = apps.find(a=>a.name===appName);
-    if(appData){
-      iframeView.src = getAppURL(appName);
-      iframeView.style.display='block';
-      homeBtn.style.display='block';
-      dock.style.display = 'none';
-      clockContainer.style.display = 'none';
-      settingsPanel.style.display = 'none';
-      appSearch.parentElement.style.display = 'none';
-    }
+
+  if (url.startsWith('TokiMate://')) {
+    const appName = url.replace('TokiMate://', '');
+    iframeView.src = getAppURL(appName);
+    iframeView.style.display = 'block';
+    homeBtn.style.display = 'block';
+    dock.style.display = 'none';
+    clockContainer.style.display = 'none';
+    settingsPanel.style.display = 'none';
+    appSearch.parentElement.style.display = 'none';
   }
 }
 
-// Dock clicks
+// FIX: Intercept Skribbl opening on dock apps — dockApps is defined above
 dockApps.forEach(app=>{
-  app.addEventListener('click',()=>openApp(app.dataset.url));
+  app.addEventListener('click',()=>{
+    if(app.dataset.app === 'Skribbl'){
+      // Show room popup
+      document.getElementById('roomPrompt').style.display = 'flex';
+      return;
+    }
+    openApp(app.dataset.url);
+  });
 });
 
 // Home button restores everything
@@ -403,7 +440,7 @@ closeCreditsBtn.addEventListener('click', () => {
     // Restore main UI elements
     clockContainer.style.display = 'flex';
     dock.style.display = 'flex';
-    searchContainer.style.display = 'block';
+    document.getElementById('searchContainer').style.display = 'block';
     iframeView.style.display = 'none';
     homeBtn.style.display = 'none';
 });
@@ -421,10 +458,10 @@ appSearch.addEventListener('input', () => {
   const val = appSearch.value.toLowerCase().trim();
   searchSuggestions.innerHTML = '';
   if(val.length === 0){searchSuggestions.style.display='none'; return;}
-  
+
   const filtered = apps.filter(app => app.name.toLowerCase().includes(val));
   if(filtered.length === 0){searchSuggestions.style.display='none'; return;}
-  
+
   filtered.forEach(app => {
     const div = document.createElement('div');
     div.textContent = app.name;
@@ -445,11 +482,183 @@ appSearch.addEventListener('keydown', e => {
     if(val.startsWith('TokiMate://')){
       const appName = val.replace('TokiMate://','');
       const match = apps.find(a=>a.name.toLowerCase()===appName.toLowerCase());
-      if(match) openApp(match.url);
+      if(match) openApp(match.redirect);
     }
     searchSuggestions.style.display='none';
   }
 });
+
+// Room prompt elements
+const roomPrompt = document.getElementById('roomPrompt');
+const roomInput = document.getElementById('roomInput');
+const joinRoomBtn = document.getElementById('joinRoomBtn');
+const cancelRoomBtn = document.getElementById('cancelRoomBtn');
+
+// Join button → uses roomInput
+joinRoomBtn.addEventListener('click', () => {
+  const code = roomInput.value.trim();
+  let link = 'https://skribbl.io';
+
+  if(code !== ''){
+    link = `https://skribbl.io/?${code}`;
+  }
+
+  roomPrompt.style.display = 'none';
+  roomInput.value = '';
+
+  iframeView.src = link;
+  iframeView.style.display = 'block';
+  homeBtn.style.display = 'block';
+  dock.style.display = 'none';
+  clockContainer.style.display = 'none';
+  settingsPanel.style.display = 'none';
+  appSearch.parentElement.style.display = 'none';
+});
+
+// Cancel button → open normal skribbl.io
+cancelRoomBtn.addEventListener('click', () => {
+  roomPrompt.style.display = 'none';
+
+  iframeView.src = 'https://skribbl.io';
+  iframeView.style.display = 'block';
+  homeBtn.style.display = 'block';
+  dock.style.display = 'none';
+  clockContainer.style.display = 'none';
+  settingsPanel.style.display = 'none';
+  appSearch.parentElement.style.display = 'none';
+});
+
+
+// === Skribbl Room Code Popup (alternate nicer prompt) ===
+// If you prefer the animated JS-created overlay approach, you can use the functions below.
+// They won't be used automatically because the static #roomPrompt works fine — they remain here
+// as an option and are safe because they reference dockApps which is defined above.
+
+function promptSkribblRoom() {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.background = 'rgba(0,0,0,0.6)';
+    overlay.style.backdropFilter = 'blur(10px)';
+    overlay.style.display = 'flex';
+    overlay.style.justifyContent = 'center';
+    overlay.style.alignItems = 'center';
+    overlay.style.zIndex = '100';
+
+    const box = document.createElement('div');
+    box.style.background = 'rgba(255,255,255,0.15)';
+    box.style.padding = '35px';
+    box.style.borderRadius = '25px';
+    box.style.backdropFilter = 'blur(20px)';
+    box.style.textAlign = 'center';
+    box.style.color = 'white';
+    box.style.width = '350px';
+    box.style.boxShadow = '0 10px 40px rgba(0,0,0,0.5)';
+
+    const title = document.createElement('h2');
+    title.textContent = 'Join a Skribbl Room';
+    title.style.marginBottom = '10px';
+
+    const subtitle = document.createElement('p');
+    subtitle.textContent = 'If you have a room code, enter it below:';
+    subtitle.style.opacity = '0.85';
+    subtitle.style.marginBottom = '20px';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Enter room code';
+    input.style.width = '80%';
+    input.style.padding = '10px';
+    input.style.borderRadius = '10px';
+    input.style.border = 'none';
+    input.style.marginBottom = '20px';
+    input.style.fontSize = '16px';
+
+    const enterBtn = document.createElement('button');
+    enterBtn.textContent = 'Join';
+    enterBtn.style.padding = '10px 20px';
+    enterBtn.style.border = 'none';
+    enterBtn.style.borderRadius = '10px';
+    enterBtn.style.background = '#4f46e5';
+    enterBtn.style.color = 'white';
+    enterBtn.style.marginRight = '10px';
+    enterBtn.style.cursor = 'pointer';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.style.padding = '10px 20px';
+    cancelBtn.style.border = 'none';
+    cancelBtn.style.borderRadius = '10px';
+    cancelBtn.style.background = '#f43f5e';
+    cancelBtn.style.color = 'white';
+    cancelBtn.style.cursor = 'pointer';
+
+    box.appendChild(title);
+    box.appendChild(subtitle);
+    box.appendChild(input);
+    box.appendChild(document.createElement('br'));
+    box.appendChild(enterBtn);
+    box.appendChild(cancelBtn);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    enterBtn.onclick = () => {
+      const value = input.value.trim();
+      document.body.removeChild(overlay);
+      resolve(value || null);
+    };
+
+    cancelBtn.onclick = () => {
+      document.body.removeChild(overlay);
+      resolve(null);
+    };
+  });
+}
+
+async function handleSkribblLaunch() {
+  const code = await promptSkribblRoom();
+  if (code) {
+    return `https://skribbl.io/?${code}`;
+  }
+  return "https://skribbl.io";
+}
+
+// Modify openApp to detect Skribbl — wrap the original in case it's redefined earlier
+const _openApp = openApp;
+openApp = async function(url) {
+  if(url === 'TokiMate://Skribbl'){
+    // Use the static room prompt in the DOM (preferred) ~ if you want the programmatic overlay,
+    // swap the two lines below.
+    document.getElementById('roomPrompt').style.display = 'flex';
+    // const finalURL = await handleSkribblLaunch();
+    // iframeView.src = finalURL;
+    // iframeView.style.display = 'block';
+    // homeBtn.style.display = 'block';
+    // dock.style.display = 'none';
+    // clockContainer.style.display = 'none';
+    // settingsPanel.style.display = 'none';
+    // appSearch.parentElement.style.display = 'none';
+    return;
+  }
+
+  // if there was an original openApp function, call it, otherwise use our default
+  if(typeof _openApp === 'function') return _openApp(url);
+  // fallback behavior
+  if(url.startsWith('TokiMate://')){
+    const appName = url.replace('TokiMate://','');
+    iframeView.src = getAppURL(appName);
+    iframeView.style.display='block';
+    homeBtn.style.display='block';
+    dock.style.display = 'none';
+    clockContainer.style.display = 'none';
+    settingsPanel.style.display = 'none';
+    appSearch.parentElement.style.display = 'none';
+  }
+};
 
 </script>
 </body>
