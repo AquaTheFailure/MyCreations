@@ -69,7 +69,7 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
 /* App icon backgrounds */
 .app-light { background: rgba(255,255,255,0.9); }
 .app-mirror { background: rgba(255,255,255,0.3); backdrop-filter: blur(5px); }
-.app-black { background: rgba(255,255,255,0.9); }
+.app-black { background: rgba(0, 0, 0, 0.48); }
 
 /* Small Home button */
 #homeBtn {
@@ -296,17 +296,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const dock = document.getElementById('dock');
   if (!dock) return;
 
-  // create dock button
-  const fsBtn = document.createElement('div');
-  fsBtn.className = 'dock-app app-black';
-  fsBtn.id = 'fullscreenDockBtn';
-  fsBtn.title = 'Toggle Fullscreen';
-  fsBtn.textContent = '🟥';
-  fsBtn.style.fontSize = '30px';
-  fsBtn.style.display = 'flex';
-  fsBtn.style.justifyContent = 'center';
-  fsBtn.style.alignItems = 'center';
-
   dock.appendChild(fsBtn);
 
   function enableCleanFullscreen() {
@@ -390,11 +379,56 @@ html, body {
     <img src="Icons/Skribbl_icon.svg" alt="Skribbl" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
   </div>
   <div class="dock-app app-light" data-app="Credits" data-url="credits" title="Credits">ℹ️</div>
+
+  <!-- Fullscreen button added directly to the dock -->
+  <div class="dock-app app-black" id="fullscreenDockBtn" data-url="fullscreen" title="Toggle Fullscreen">🟥</div>
 </div>
 
 <button id="homeBtn" title="Home">
   <img src="Icons/Home_icon.svg" alt="Home" style="width:28px;height:28px;display:block;margin:auto;">
-</button></button>
+</button>
+
+<script>
+(function(){
+  const fsBtn = document.getElementById('fullscreenDockBtn');
+  if(!fsBtn) return;
+
+  function enableCleanFullscreen() {
+    document.body.classList.add('fullscreen-mode');
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(()=>{/* ignore */});
+    }
+  }
+
+  function disableCleanFullscreen() {
+    document.body.classList.remove('fullscreen-mode');
+    if (document.fullscreenElement) {
+      document.exitFullscreen && document.exitFullscreen().catch(()=>{/* ignore */});
+    }
+  }
+
+  fsBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) enableCleanFullscreen();
+    else disableCleanFullscreen();
+  });
+
+  // Keep UI state in sync with native fullscreen changes (Esc or other triggers)
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+      document.body.classList.remove('fullscreen-mode');
+    } else {
+      document.body.classList.add('fullscreen-mode');
+    }
+  });
+
+  // If user presses Esc and for some reason class remains, ensure cleanup
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !document.fullscreenElement) {
+      document.body.classList.remove('fullscreen-mode');
+    }
+  });
+})();
+</script>
 
 <script>
 window.addEventListener('load', () => document.body.style.opacity = '1');
