@@ -8,9 +8,109 @@
 <style>
 * {margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif;}
 html, body {height:100%; overflow:hidden;}
+/* Intro animation + font */
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap');
+
+:root {
+    --intro-z: 9999;
+}
+</style>
+<script>
+try { sessionStorage.removeItem('toki_intro_shown'); } catch(e) { /* ignore */ }
+</script>
+<style>
+/* Intro mode hides the main UI so only the background is visible */
+body.intro-mode #clockContainer,
+body.intro-mode #dock,
+body.intro-mode #settingsPanel,
+body.intro-mode #searchContainer,
+body.intro-mode #iframeView,
+body.intro-mode #creditsView,
+body.intro-mode #homeBtn,
+body.intro-mode #namePrompt,
+body.intro-mode #roomPrompt {
+        display: none !important;
+}
+
+/* Intro overlay container (transparent so background shows) */
+#introOverlay {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: auto;
+        z-index: var(--intro-z);
+        user-select: none;
+        -webkit-user-select: none;
+        cursor: pointer;
+}
+
+/* Day (cursive) placed near top middle */
+#introOverlay .introDay {
+        font-family: 'Dancing Script', cursive;
+        color: rgba(255,255,255,0.95);
+        font-size: clamp(28px, 6vw, 64px);
+        letter-spacing: 0.6px;
+        text-align: center;
+        text-shadow: 0 6px 30px rgba(0,0,0,0.55);
+        transform: translateY(-10vh);
+        animation: introSlideIn 900ms cubic-bezier(.2,.9,.27,1) both;
+}
+
+/* Numeric date below the day, smaller and monospaced-ish */
+#introOverlay .introDate {
+        margin-top: 18px;
+        color: rgba(255,255,255,0.9);
+        font-size: clamp(16px, 3.5vw, 22px);
+        font-weight: 600;
+        text-align: center;
+        text-shadow: 0 4px 18px rgba(0,0,0,0.45);
+        transform: translateY(-9vh);
+        animation: introSlideIn 1050ms cubic-bezier(.2,.9,.27,1) both;
+}
+
+/* A subtle animated underline / ring to make it feel alive */
+#introOverlay .introAccent {
+        margin-top: 26px;
+        width: 120px;
+        height: 2px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.45));
+        transform: translateY(-8.5vh);
+        animation: introPulse 1400ms ease-in-out infinite;
+        opacity: 0.9;
+}
+
+/* Intro fade-out class applied when user clicks */
+#introOverlay.fadeOut {
+        animation: introFadeOut 450ms ease-in forwards;
+        pointer-events: none;
+}
+
+/* Keyframes */
+@keyframes introSlideIn {
+        0% { opacity: 0; transform: translateY(-20vh) scale(0.98); }
+        60% { opacity: 1; transform: translateY(-9vh) scale(1.01); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes introPulse {
+        0% { transform: translateY(-8.5vh) scaleX(0.9); opacity: 0.8; }
+        50% { transform: translateY(-8.5vh) scaleX(1.05); opacity: 1; }
+        100% { transform: translateY(-8.5vh) scaleX(0.9); opacity: 0.8; }
+}
+
+@keyframes introFadeOut {
+        0% { opacity: 1; transform: scale(1); filter: blur(0px); }
+        100% { opacity: 0; transform: scale(0.98); filter: blur(6px); }
+}
+
+/* Small helper to ensure the overlay doesn't block keyboard focus when hidden */
+body:not(.intro-mode) #introOverlay { display: none !important; }
 
 body {
-    background: url("https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/de917977268563.5c829061be1d3.gif") center/cover no-repeat;
     display:flex; justify-content:center; align-items:center; flex-direction:column;
     color:white; transition:background 0.5s, opacity 1s ease-in-out;
     opacity: 0;
@@ -91,10 +191,6 @@ body.resting #roomPrompt {
 #clockContainer:hover {transform:scale(1.05);}
 #clock {font-size:100px; font-weight:700; text-shadow:0 0 20px rgba(0,0,0,0.5),0 0 10px rgba(255,255,255,0.2);}
 #welcomeName {margin-top:10px; font-size:24px; font-weight:500; opacity:0.85; text-shadow:0 0 10px rgba(0,0,0,0.3);}
-
-#analogClock {display:none; position:relative; width:220px; height:220px; border:10px solid rgba(255,255,255,0.6); border-radius:50%; background: rgba(255,255,255,0.05); box-shadow:0 0 40px rgba(255,255,255,0.2) inset;}
-.hand {position:absolute; width:50%; height:4px; background:white; top:50%; transform-origin:100%; transform:rotate(90deg); transition: transform 0.5s ease-in-out;}
-.hourHand {height:6px;} .minuteHand {height:4px;} .secondHand {height:2px; background:#f43f5e;}
 
 #settingsPanel {
     position: fixed; top:0; right:-400px; height:100%; width:400px;
@@ -232,7 +328,7 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
 #cancelRoomBtn { background: #f87171; color: white; }
 </style>
 </head>
-<body>
+<body class="intro-mode">
 
 <div id="clockContainer">
     <div id="clock">00:00:00</div>
@@ -268,18 +364,6 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
             <option value="Asia/Tokyo">Tokyo</option>
         </select>
     </label>
-    <label>Clock Format:
-        <select id="formatSelect">
-            <option value="12">12-hour</option>
-            <option value="24">24-hour</option>
-        </select>
-    </label>
-    <label>Clock Style:
-        <select id="styleSelect">
-            <option value="digital">Digital</option>
-            <option value="analog">Analog</option>
-        </select>
-    </label>
     <label>Background:
         <select id="backgroundSelect">
             <option value="digitalLandscape">Digital Landscape</option>
@@ -305,6 +389,7 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
     <ul>
         <li>Emilio – SVG design</li>
         <li>Tsukki – Concept and Implementation</li>
+        <li>Cole – Testing & User Feedback</li>
     </ul>
     <p>Made using HTML, CSS, and JavaScript. <br><br> Please Reload After Closing This.</p>
     <button id="closeCredits">Close</button>
@@ -320,7 +405,7 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
 <div id="dock">
     <div class="dock-app app-light" data-app="Browser" data-url="TokiMate://Browser" title="Browser">🖥️</div>
     <div class="dock-app app-light" data-app="Mail" data-url="TokiMate://Mail" title="Mail">📧</div>
-    <div class="dock-app app-light" data-app="Music" data-url="TokiMate://Music" title="Music">
+    <div id="musicApp" class="dock-app app-light" data-app="Music" data-raw="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Apps/music/index.html" title="Music" role="button" aria-label="Music">
         <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Icons/music_player.svg" alt="Music" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
     </div>
     <div class="dock-app app-light" data-app="Photos" data-url="TokiMate://Photos" title="Photos">
@@ -355,6 +440,38 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
 </div>
 
 <script>
+(function(){
+    // Ensure closing credits fully restores interactive UI (fixes settings toggle after credits)
+    const closeBtn = document.getElementById('closeCredits');
+    if (!closeBtn) return;
+
+    closeBtn.addEventListener('click', () => {
+        // Let the original handler run first, then restore any inline styles that block interaction
+        setTimeout(() => {
+            const sp = document.getElementById('settingsPanel');
+            if (sp) {
+                sp.style.display = '';        // remove inline "display: none" if it was set
+                sp.classList.remove('active'); // ensure it's not stuck open/closed state
+            }
+
+            const search = document.getElementById('searchContainer');
+            if (search) search.style.display = '';
+
+            const cc = document.getElementById('clockContainer');
+            if (cc) cc.style.pointerEvents = '';
+
+            const dockEl = document.getElementById('dock');
+            if (dockEl) dockEl.style.pointerEvents = '';
+
+            const iframe = document.getElementById('iframeView');
+            if (iframe) iframe.style.pointerEvents = '';
+
+            // If fullscreen was used for credits, ensure page focus for input/clicks
+            try { window.focus(); } catch(e){/* ignore */ }
+        }, 40);
+    });
+})();
+
 window.addEventListener('load', () => document.body.style.opacity = '1');
 
 // Clock and Analog Hands
@@ -367,7 +484,6 @@ const secondHand=analogClock.querySelector('.secondHand');
 const clockContainer=document.getElementById('clockContainer');
 const settingsPanel=document.getElementById('settingsPanel');
 const timezoneSelect=document.getElementById('timezoneSelect');
-const formatSelect=document.getElementById('formatSelect');
 const styleSelect=document.getElementById('styleSelect');
 const backgroundSelect=document.getElementById('backgroundSelect');
 const appStyleSelect=document.getElementById('appStyleSelect');
@@ -398,19 +514,36 @@ saveNameBtn.addEventListener('click',()=>{
 });
 
 // Settings
-let settings={timezone:'America/Chicago',format:'24',style:'digital',background:'digitalLandscape',appStyle:'light'};
+let settings={timezone:'America/Chicago',format:'12',style:'digital',background:'digitalLandscape',appStyle:'light'};
 const savedSettings=localStorage.getItem('desktopSettings');if(savedSettings){settings={...settings,...JSON.parse(savedSettings)};}
 
-timezoneSelect.value=settings.timezone;formatSelect.value=settings.format;styleSelect.value=settings.style;
 backgroundSelect.value=settings.background;appStyleSelect.value=settings.appStyle;
 
 function updateClock(){
-    const now=new Date();
-    const options={timeZone:settings.timezone,hour12:settings.format==='12',hour:'2-digit',minute:'2-digit',second:'2-digit'};
-    clock.textContent=now.toLocaleTimeString('en-US',options);
-    const local=new Date(now.toLocaleString('en-US',{timeZone:settings.timezone}));
-    const h=local.getHours()%12,m=local.getMinutes(),s=local.getSeconds();
-    hourHand.style.transform=`rotate(${h*30+m/2}deg)`;minuteHand.style.transform=`rotate(${m*6}deg)`;secondHand.style.transform=`rotate(${s*6}deg)`;
+    const now = new Date();
+    const local = new Date(now.toLocaleString('en-US', { timeZone: settings.timezone }));
+
+    let h = local.getHours();
+    const m = local.getMinutes();
+    const s = local.getSeconds();
+
+    // Convert to 12-hour format and pad with leading zeros (e.g. "02:02:30")
+    let h12 = h % 12;
+    if (h12 === 0) h12 = 12;
+    const hh = String(h12).padStart(2, '0');
+    const mm = String(m).padStart(2, '0');
+    const ss = String(s).padStart(2, '0');
+
+    clock.textContent = `${hh}:${mm}:${ss}`;
+
+    // Update analog hands (if visible)
+    const hourAngle = (h % 12) * 30 + (m / 60) * 30 + (s / 3600) * 30;
+    const minuteAngle = m * 6 + (s / 60) * 6;
+    const secondAngle = s * 6;
+
+    if (hourHand) hourHand.style.transform = `rotate(${hourAngle}deg)`;
+    if (minuteHand) minuteHand.style.transform = `rotate(${minuteAngle}deg)`;
+    if (secondHand) secondHand.style.transform = `rotate(${secondAngle}deg)`;
 }
 setInterval(updateClock,1000);updateClock();
 
@@ -424,23 +557,244 @@ const gifBackgrounds = [
   "https://i.redd.it/lhnvupvps4h91.gif"
 ];
 
+// Battery indicator (small, bottom-left)
+(function(){
+    // inject styles
+    const s = document.createElement('style');
+    s.textContent = `
+    #batteryIndicator{
+        position:fixed;
+        left:18px;
+        bottom:18px;
+        z-index:60;
+        display:flex;
+        gap:8px;
+        align-items:center;
+        padding:6px 8px;
+        border-radius:10px;
+        background: rgba(0,0,0,0.45);
+        color: white;
+        font-size:12px;
+        font-weight:600;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+        backdrop-filter: blur(6px);
+        cursor:default;
+        user-select:none;
+        min-width:56px;
+    }
+    #batteryIndicator .bat-bar{
+        width:38px;
+        height:10px;
+        border-radius:6px;
+        background:rgba(255,255,255,0.12);
+        position:relative;
+        overflow:hidden;
+        box-shadow: inset 0 -2px 6px rgba(0,0,0,0.35);
+        flex:0 0 auto;
+    }
+    #batteryIndicator .bat-level{
+        position:absolute;
+        left:0; top:0; bottom:0;
+        width:50%;
+        background:linear-gradient(90deg,#34d399,#10b981);
+        transition:width 300ms ease, background 300ms ease;
+    }
+    #batteryIndicator .bat-tip{
+        width:4px; height:6px; background:rgba(255,255,255,0.85);
+        margin-left:4px; border-radius:2px;
+        flex:0 0 auto;
+        opacity:0.9;
+    }
+    #batteryIndicator .bat-text{ min-width:26px; text-align:right; opacity:0.95; }
+    body.intro-mode #batteryIndicator{ display:none !important; }
+    `;
+    document.head.appendChild(s);
+
+    // create element
+    const el = document.createElement('div');
+    el.id = 'batteryIndicator';
+    el.setAttribute('aria-live','polite');
+    el.innerHTML = `
+        <div class="bat-bar" aria-hidden="true"><div class="bat-level"></div></div>
+        <div class="bat-tip" aria-hidden="true"></div>
+        <div class="bat-text">--%</div>
+    `;
+    document.body.appendChild(el);
+
+    const levelEl = el.querySelector('.bat-level');
+    const textEl = el.querySelector('.bat-text');
+
+    function setUI(level, charging){
+        const pct = Math.round(level * 100);
+        levelEl.style.width = Math.max(1, pct) + '%';
+        // color thresholds
+        if(charging){
+            levelEl.style.background = 'linear-gradient(90deg,#60a5fa,#3b82f6)';
+        } else if(pct > 60){
+            levelEl.style.background = 'linear-gradient(90deg,#34d399,#10b981)';
+        } else if(pct > 30){
+            levelEl.style.background = 'linear-gradient(90deg,#f59e0b,#f97316)';
+        } else {
+            levelEl.style.background = 'linear-gradient(90deg,#f43f5e,#ef4444)';
+        }
+        textEl.textContent = (charging ? '⚡ ' : '') + pct + '%';
+        textEl.title = charging ? `Charging — ${pct}%` : `${pct}% battery remaining`;
+    }
+
+    // default before data available
+    setUI(0, false);
+    // modern Battery Status API
+    if (navigator.getBattery) {
+        navigator.getBattery().then(batt => {
+            setUI(batt.level, batt.charging);
+            // update on events
+            batt.addEventListener('levelchange', ()=> setUI(batt.level, batt.charging));
+            batt.addEventListener('chargingchange', ()=> setUI(batt.level, batt.charging));
+        }).catch(()=> {
+            // not available / permission denied
+            textEl.textContent = 'N/A';
+            levelEl.style.width = '0%';
+        });
+    } else {
+        // Fallback: show "N/A" on unsupported browsers
+        textEl.textContent = 'N/A';
+        levelEl.style.width = '0%';
+    }
+
+    // small accessibility: click to announce state via alert (non-intrusive)
+    el.addEventListener('click', ()=> {
+        const t = textEl.textContent;
+        try { navigator.clipboard && navigator.clipboard.writeText(t); } catch(e){/* ignore */ }
+    });
+})();
 function applySettings(){
     localStorage.setItem('desktopSettings', JSON.stringify(settings));
     clock.style.display = settings.style === 'digital' ? 'block' : 'none';
-    analogClock.style.display = settings.style === 'analog' ? 'block' : 'none';
     const b = settings.background;
     document.body.style.transition = 'background 0.8s ease-in-out, opacity 0.8s ease-in-out';
     document.body.style.backgroundAttachment = 'fixed';
+
+    // Inject animated gradient + blob keyframes and styles once
+    if (!document.getElementById('gradientAnimations')) {
+        const styleEl = document.createElement('style');
+        styleEl.id = 'gradientAnimations';
+        styleEl.textContent = `
+            /* Base gradient pan */
+            @keyframes gradientShift {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+            }
+
+            /* Soft "floating blob" movements (animate secondary radial layers' positions) */
+            @keyframes blobMoveA {
+                0%   { background-position: 10% 20%, 80% 60%; }
+                50%  { background-position: 30% 40%, 60% 30%; }
+                100% { background-position: 10% 20%, 80% 60%; }
+            }
+            @keyframes blobMoveB {
+                0%   { background-position: 70% 10%, 20% 80%; }
+                50%  { background-position: 50% 30%, 40% 60%; }
+                100% { background-position: 70% 10%, 20% 80%; }
+            }
+
+            /* Subtle sheen/3D highlight glide */
+            @keyframes sheenMove {
+                0% { transform: translateX(-25%) rotate(-12deg); opacity: 0.06; }
+                50% { transform: translateX(25%) rotate(-12deg); opacity: 0.13; }
+                100% { transform: translateX(-25%) rotate(-12deg); opacity: 0.06; }
+            }
+
+            /* A pseudo-element used for glossy 3D sheen */
+            body.toki-sheen {
+                position: relative;
+            }
+            body.toki-sheen::after {
+                content: "";
+                pointer-events: none;
+                position: fixed;
+                left: -40%;
+                top: -40%;
+                width: 180%;
+                height: 180%;
+                transform: rotate(-12deg);
+                background: linear-gradient(90deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0.02) 60%, rgba(255,255,255,0.0) 100%);
+                filter: blur(28px);
+                mix-blend-mode: overlay;
+                z-index: -1;
+                animation: sheenMove 9s ease-in-out infinite;
+            }
+
+            /* Gradient + layered-radial combinations (3 distinct presets) */
+            body[data-gradient="gradient1"] {
+                /* main animated linear gradient (purple-indigo) + two soft radial blobs for depth */
+                background-image:
+                    linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a78bfa 100%),
+                    radial-gradient(40% 30% at 10% 20%, rgba(120,94,255,0.28), transparent 40%),
+                    radial-gradient(30% 25% at 80% 60%, rgba(255,120,200,0.16), transparent 45%);
+                background-size: 200% 200%, 50% 60%, 40% 50%;
+                background-repeat: no-repeat;
+                background-position: 0% 50%, 10% 20%, 80% 60%;
+                animation: gradientShift 12s ease infinite, blobMoveA 10s ease-in-out infinite;
+                will-change: background-position;
+            }
+
+            body[data-gradient="gradient2"] {
+                /* warm-pink peach base with different colored blobs for contrast */
+                background-image:
+                    linear-gradient(135deg, #ff9a9e 0%, #fad0c4 50%, #ffecd2 100%),
+                    radial-gradient(38% 28% at 70% 10%, rgba(255,200,150,0.20), transparent 40%),
+                    radial-gradient(32% 24% at 20% 80%, rgba(255,120,180,0.18), transparent 45%);
+                background-size: 220% 220%, 48% 52%, 36% 44%;
+                background-repeat: no-repeat;
+                background-position: 0% 50%, 70% 10%, 20% 80%;
+                animation: gradientShift 14s ease infinite, blobMoveB 11s ease-in-out infinite;
+                will-change: background-position;
+            }
+
+            body[data-gradient="gradient3"] {
+                /* teal-blue base with deep vignette + floating cool blobs for "oceanic 3D" feel */
+                background-image:
+                    linear-gradient(135deg, #43cea2 0%, #185a9d 50%, #0f172a 100%),
+                    radial-gradient(42% 32% at 20% 30%, rgba(30,200,180,0.20), transparent 45%),
+                    radial-gradient(36% 26% at 82% 70%, rgba(10,60,120,0.18), transparent 50%),
+                    radial-gradient(60% 60% at 50% 90%, rgba(0,0,0,0.18), transparent 65%);
+                background-size: 200% 200%, 50% 60%, 40% 46%, 140% 140%;
+                background-repeat: no-repeat;
+                background-position: 0% 50%, 20% 30%, 82% 70%, 50% 90%;
+                animation: gradientShift 16s ease infinite, blobMoveA 12s ease-in-out infinite, blobMoveB 9s ease-in-out infinite;
+                will-change: background-position;
+            }
+        `;
+        document.head.appendChild(styleEl);
+    }
+
+    // Reset inline background props so CSS rules can take over for animated presets
+    document.body.style.background = '';
+    document.body.style.animation = '';
+    document.body.style.backgroundSize = '';
+    document.body.style.backgroundRepeat = 'no-repeat';
+    // remove any previous dataset flag or sheen class
+    delete document.body.dataset.gradient;
+    document.body.classList.remove('toki-sheen');
+
     if (b === 'digitalLandscape') {
         const randomGif = gifBackgrounds[Math.floor(Math.random() * gifBackgrounds.length)];
         document.body.style.background = `url('${randomGif}') center/cover no-repeat fixed`;
-    } else if (b === 'gradient1') {
-        document.body.style.background = "linear-gradient(135deg,#667eea,#764ba2)";
-    } else if (b === 'gradient2') {
-        document.body.style.background = "linear-gradient(135deg,#ff9a9e,#fad0c4)";
-    } else if (b === 'gradient3') {
-        document.body.style.background = "linear-gradient(135deg,#43cea2,#185a9d)";
+    } else if (b === 'gradient1' || b === 'gradient2' || b === 'gradient3') {
+        // Use dataset to activate the matching CSS preset which includes animated layers
+        document.body.dataset.gradient = b;
+        // Add a subtle sheen overlay (3D glossy effect)
+        document.body.classList.add('toki-sheen');
     }
+
+    // Fallback for any other (non-animated) backgrounds
+    else {
+        // leave defaults or set a simple dark fallback
+        document.body.style.background = '#0f172a';
+    }
+
+    // Update app icon styles in dock
     dockApps.forEach(app => {
         app.classList.remove('app-light','app-mirror','app-black');
         app.classList.add(`app-${settings.appStyle}`);
@@ -448,7 +802,7 @@ function applySettings(){
 }
 applySettings();
 
-[timezoneSelect,formatSelect,styleSelect,backgroundSelect,appStyleSelect].forEach(sel=>{
+[timezoneSelect,backgroundSelect,appStyleSelect].forEach(sel=>{
     sel.addEventListener('change',()=>{
         settings[sel.id.replace('Select','')]=sel.value;applySettings();
     });
@@ -829,6 +1183,107 @@ function exitRestMode() {
     // Reset inactivity timer
     resetInactivityTimer();
 }
+(function() {
+    // Only show once per session
+    if (sessionStorage.getItem('toki_intro_shown')) return;
+
+    // Create overlay markup
+    const overlay = document.createElement('div');
+    overlay.id = 'introOverlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-hidden', 'false');
+
+    const dayEl = document.createElement('div');
+    dayEl.className = 'introDay';
+
+    const dateEl = document.createElement('div');
+    dateEl.className = 'introDate';
+
+    const accent = document.createElement('div');
+    accent.className = 'introAccent';
+
+    // Compute localized day + numeric date
+    const now = new Date();
+    // E.g. "Saturday" or localized long weekday
+    const dayStr = now.toLocaleDateString(undefined, { weekday: 'long' });
+    // Numeric date like "June 21, 2025" (you can customize)
+    const dateStr = now.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+
+    dayEl.textContent = dayStr;
+    dateEl.textContent = dateStr;
+
+    overlay.appendChild(dayEl);
+    overlay.appendChild(dateEl);
+    overlay.appendChild(accent);
+
+    // Add intro-mode class to body which hides the rest of the UI via CSS above
+    document.body.classList.add('intro-mode');
+    document.body.appendChild(overlay);
+
+    // Clicking anywhere dismisses the intro and reveals the home screen
+    function dismissIntro() {
+        overlay.classList.add('fadeOut');
+        // small timeout to let fadeOut animation run
+        setTimeout(() => {
+            if (overlay && overlay.parentElement) overlay.parentElement.removeChild(overlay);
+            document.body.classList.remove('intro-mode');
+            sessionStorage.setItem('toki_intro_shown', '1');
+            try { window.focus(); } catch(e) {}
+        }, 420);
+        // remove listener to be safe
+        overlay.removeEventListener('click', dismissIntro);
+        document.removeEventListener('keydown', onKey);
+    }
+
+    function onKey(e) {
+        // allow Enter/Escape to dismiss as well
+        if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ') {
+            dismissIntro();
+        }
+    }
+
+    overlay.addEventListener('click', dismissIntro);
+    document.addEventListener('keydown', onKey);
+
+    // Optional: auto-dismiss after a timeout (uncomment if desired)
+    // setTimeout(dismissIntro, 4000);
+})();
+    (function(){
+      const el = document.getElementById('musicApp');
+      if(!el) return;
+      el.addEventListener('click', async function(e){
+        e.preventDefault();
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
+
+        const raw = el.dataset.raw;
+        if(!raw){ alert('No music URL configured'); return; }
+
+        try {
+          const res = await fetch(raw);
+          if(!res.ok) throw new Error('Fetch failed: ' + res.status);
+          const html = await res.text();
+          const blob = new Blob([html], {type:'text/html'});
+          const blobUrl = URL.createObjectURL(blob);
+
+          const iframe = document.getElementById('iframeView');
+          const home = document.getElementById('homeBtn');
+          const dock = document.getElementById('dock');
+          const clock = document.getElementById('clockContainer');
+          const settings = document.getElementById('settingsPanel');
+          const search = document.getElementById('searchContainer');
+
+          if(iframe){ iframe.src = blobUrl; iframe.style.display = 'block'; }
+          if(home) home.style.display = 'block';
+          if(dock) dock.style.display = 'none';
+          if(clock) clock.style.display = 'none';
+          if(settings) settings.style.display = 'none';
+          if(search) search.style.display = 'none';
+        } catch(err){
+          console.error(err);
+          alert('Failed to load music site.');
+        }
+      });
+    })();
 </script>
 </body>
 </html>
