@@ -69,7 +69,7 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
 /* App icon backgrounds */
 .app-light { background: rgba(255,255,255,0.9); }
 .app-mirror { background: rgba(255,255,255,0.3); backdrop-filter: blur(5px); }
-.app-black { background: rgba(0,0,0,0.7); }
+.app-black { background: rgba(255,255,255,0.9); }
 
 /* Small Home button */
 #homeBtn {
@@ -167,7 +167,7 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
 
 <div id="settingsPanel">
   <h2 style="display:flex; align-items:center; gap:10px;">
-    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/Skribbl/settings.svg" alt="Settings Logo" style="width:30px; height:30px;">
+    <img src="Icons/settings.svg" alt="Settings Logo" style="width:30px; height:30px;">
     Settings
   </h2>
   <label>Timezone:
@@ -197,8 +197,71 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
       <option value="gradient1">Gradient 1</option>
       <option value="gradient2">Gradient 2</option>
       <option value="gradient3">Gradient 3</option>
+      <option value="custom">Custom (Upload)</option>
     </select>
   </label>
+
+  <!-- Hidden file input and preview for custom background -->
+  <input type="file" id="backgroundUpload" accept="image/*" style="display:none;">
+  <img id="bgPreview" alt="Background preview" style="display:none; width:100%; border-radius:12px; margin-top:10px; box-shadow:0 8px 30px rgba(0,0,0,0.4);">
+
+  <script>
+    (function(){
+      const bgSelect = document.getElementById('backgroundSelect');
+      const bgUpload = document.getElementById('backgroundUpload');
+      const bgPreview = document.getElementById('bgPreview');
+
+      function applyCustomBackground(dataUrl){
+        if(!dataUrl) return;
+        // persist the custom image and mark settings
+        try {
+          const s = JSON.parse(localStorage.getItem('desktopSettings') || '{}');
+          s.background = 'custom';
+          localStorage.setItem('desktopSettings', JSON.stringify(s));
+        } catch (e) {}
+        localStorage.setItem('customBackgroundImage', dataUrl);
+        document.body.style.background = `url('${dataUrl}') center/cover no-repeat fixed`;
+        document.body.style.backgroundAttachment = 'fixed';
+        bgPreview.src = dataUrl;
+        bgPreview.style.display = 'block';
+      }
+
+      // When user selects "Custom", immediately open file dialog
+      bgSelect.addEventListener('change', () => {
+        if (bgSelect.value === 'custom') {
+          // trigger file picker
+          bgUpload.click();
+        } else {
+          // hide preview for non-custom choices
+          bgPreview.style.display = 'none';
+        }
+      });
+
+      // Handle file selection and read as DataURL
+      bgUpload.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          applyCustomBackground(ev.target.result);
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // On page load, if settings indicate a custom background, apply stored image
+      window.addEventListener('load', () => {
+        try {
+          const s = JSON.parse(localStorage.getItem('desktopSettings') || '{}');
+          const img = localStorage.getItem('customBackgroundImage');
+          if (s.background === 'custom' && img) {
+            // ensure the select shows custom
+            bgSelect.value = 'custom';
+            applyCustomBackground(img);
+          }
+        } catch (e) {}
+      });
+    })();
+  </script>
   <label>App Icon Style:
     <select id="appStyleSelect">
       <option value="light">Light</option>
@@ -227,24 +290,110 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
   <div id="searchSuggestions"></div>
 </div>
 
-<!-- Bottom dock -->
+<!-- Fullscreen toggle (adds a red-square button to the dock and enables a clean fullscreen wallpaper view) -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const dock = document.getElementById('dock');
+  if (!dock) return;
+
+  // create dock button
+  const fsBtn = document.createElement('div');
+  fsBtn.className = 'dock-app app-black';
+  fsBtn.id = 'fullscreenDockBtn';
+  fsBtn.title = 'Toggle Fullscreen';
+  fsBtn.textContent = '🟥';
+  fsBtn.style.fontSize = '30px';
+  fsBtn.style.display = 'flex';
+  fsBtn.style.justifyContent = 'center';
+  fsBtn.style.alignItems = 'center';
+
+  dock.appendChild(fsBtn);
+
+  function enableCleanFullscreen() {
+    // visually hide UI elements but keep background visible
+    document.body.classList.add('fullscreen-mode');
+    // request fullscreen for the whole document
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(()=>{/* ignore */});
+    }
+  }
+
+  function disableCleanFullscreen() {
+    document.body.classList.remove('fullscreen-mode');
+    if (document.fullscreenElement) {
+      document.exitFullscreen && document.exitFullscreen().catch(()=>{/* ignore */});
+    }
+  }
+
+  fsBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) enableCleanFullscreen();
+    else disableCleanFullscreen();
+  });
+
+  // Keep UI state in sync with native fullscreen changes (Esc or other triggers)
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+      // exited fullscreen
+      document.body.classList.remove('fullscreen-mode');
+    } else {
+      // entered fullscreen (could be via F11 or other)
+      document.body.classList.add('fullscreen-mode');
+    }
+  });
+
+  // If user presses Esc and for some reason class remains, ensure cleanup
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !document.fullscreenElement) {
+      document.body.classList.remove('fullscreen-mode');
+    }
+  });
+});
+</script>
+
+<style>
+/* Smooth transitions and hide everything except wallpaper when in fullscreen-mode */
+.fullscreen-mode #dock,
+.fullscreen-mode #clockContainer,
+.fullscreen-mode #settingsPanel,
+.fullscreen-mode #iframeView,
+.fullscreen-mode #searchContainer,
+.fullscreen-mode #homeBtn,
+.fullscreen-mode #creditsView,
+.fullscreen-mode #namePrompt {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px) scale(.995);
+  transition: opacity .45s ease, transform .45s ease;
+}
+
+/* Ensure the background stays visible and transitions smoothly */
+html, body {
+  transition: background .6s ease, opacity .45s ease;
+}
+
+/* Hide iframe forcibly in fullscreen-mode to avoid any content overlay */
+.fullscreen-mode #iframeView { display: none !important; }
+
+/* Slight visual polish for the added dock button */
+#fullscreenDockBtn:hover { transform: translateY(-6px) scale(1.06); box-shadow:0 10px 25px rgba(255,255,255,0.9); }
+</style>
 <div id="dock">
   <div class="dock-app app-light" data-app="Browser" data-url="TokiMate://Browser" title="Browser">🖥️</div>
   <div class="dock-app app-light" data-app="Mail" data-url="TokiMate://Mail" title="Mail">📧</div>
   <div class="dock-app app-light" data-app="Music" data-url="TokiMate://Music" title="Music">
-    <img src="file:///home/Slimee5661/Documents/Aqua%20The%20Failure/Icons/music_player.svg" alt="Music" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+    <img src="Icons/music_player.svg" alt="Music" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
   </div>
   <div class="dock-app app-light" data-app="Photos" data-url="TokiMate://Photos" title="Photos">
-    <img src="file:///home/Slimee5661/Documents/Aqua%20The%20Failure/Icons/Pictures_icon.svg" alt="Photos" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+    <img src="Icons/Pictures_icon.svg" alt="Photos" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
   </div>
   <div class="dock-app app-light" data-app="Skribbl" data-url="TokiMate://Skribbl" title="Skribbl">
-    <img src="file:///home/Slimee5661/Documents/Aqua The Failure/Icons/Skribbl_icon.svg" alt="Skribbl" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+    <img src="Icons/Skribbl_icon.svg" alt="Skribbl" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
   </div>
   <div class="dock-app app-light" data-app="Credits" data-url="credits" title="Credits">ℹ️</div>
 </div>
 
 <button id="homeBtn" title="Home">
-  <img src="file:///home/Slimee5661/Documents/Aqua The Failure/Icons/Home_icon.svg" alt="Home" style="width:28px;height:28px;display:block;margin:auto;">
+  <img src="Icons/Home_icon.svg" alt="Home" style="width:28px;height:28px;display:block;margin:auto;">
 </button></button>
 
 <script>
@@ -304,7 +453,8 @@ const gifBackgrounds = [
   "https://images.steamusercontent.com/ugc/271725310716427808/FA3288AF961AFFFDC71DB99058354F1159943C09/?imw=5000&imh=5000&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false",
   "https://windowscustomization.com/wp-content/uploads/2019/02/Wallpaper.gif",
   "https://windowscustomization.com/wp-content/uploads/2018/12/Anime-And-Scape-Watefal.gif",
-  "https://wallpaperaccess.com/full/9336992.gif"
+  "https://wallpaperaccess.com/full/9336992.gif",
+  "https://i.redd.it/x4hnwsvps4h91.gif"
 ];
 
 function applySettings(){
