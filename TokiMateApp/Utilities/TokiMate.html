@@ -167,7 +167,7 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
 
 <div id="settingsPanel">
   <h2 style="display:flex; align-items:center; gap:10px;">
-    <img src="Icons/settings.svg" alt="Settings Logo" style="width:30px; height:30px;">
+    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Icons/settings.svg" alt="Settings Logo" style="width:30px; height:30px;">
     Settings
   </h2>
   <label>Timezone:
@@ -367,25 +367,33 @@ html, body {
 #fullscreenDockBtn:hover { transform: translateY(-6px) scale(1.06); box-shadow:0 10px 25px rgba(255,255,255,0.9); }
 </style>
 <div id="dock">
-  <div class="dock-app app-light" data-app="Browser" data-url="TokiMate://Browser" title="Browser">🖥️</div>
-  <div class="dock-app app-light" data-app="Mail" data-url="TokiMate://Mail" title="Mail">📧</div>
+  <div class="dock-app app-light" data-app="Browser" data-url="TokiMate://Browser" title="Browser">
+    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Icons/browser_icon.svg" alt="Browser" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+  </div>
+  <div class="dock-app app-light" data-app="Mail" data-url="TokiMate://Mail" title="Mail">
+    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Icons/mail_icon.svg" alt="Mail" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+  </div>
   <div class="dock-app app-light" data-app="Music" data-url="TokiMate://Music" title="Music">
-    <img src="Icons/music_player.svg" alt="Music" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Icons/music_player.svg" alt="Music" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
   </div>
   <div class="dock-app app-light" data-app="Photos" data-url="TokiMate://Photos" title="Photos">
-    <img src="Icons/Pictures_icon.svg" alt="Photos" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Icons/Pictures_icon.svg" alt="Photos" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
   </div>
   <div class="dock-app app-light" data-app="Skribbl" data-url="TokiMate://Skribbl" title="Skribbl">
-    <img src="Icons/Skribbl_icon.svg" alt="Skribbl" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Icons/Skribbl_icon.svg" alt="Skribbl" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
   </div>
-  <div class="dock-app app-light" data-app="Credits" data-url="credits" title="Credits">ℹ️</div>
+  <div class="dock-app app-light" data-app="Credits" data-url="credits" title="Credits">
+    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Icons/info_icon.svg" alt="Credits" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+  </div>
 
   <!-- Fullscreen button added directly to the dock -->
-  <div class="dock-app app-black" id="fullscreenDockBtn" data-url="fullscreen" title="Toggle Fullscreen">🟥</div>
+  <div class="dock-app app-black" id="fullscreenDockBtn" data-url="fullscreen" title="Toggle Fullscreen">
+    <img src="https://github.com/AquaTheFailure/MyCreations/raw/main/TokiMateApp/Utilities/Icons/fullscreen_icon.svg" alt="Fullscreen" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+  </div>
 </div>
 
 <button id="homeBtn" title="Home">
-  <img src="file:///home/chronos/u-b4b0dbb2709dbb80bc8404e880fc7f79a6796c7c/MyFiles/Downloads/TokiMate/index.html" alt="Home" style="width:28px;height:28px;display:block;margin:auto;">
+  <img src="https://github.com/AquaTheFailure/MyCreations/raw/main/TokiMateApp/Utilities/Icons/Home_icon.svg" alt="Home" style="width:28px;height:28px;display:block;margin:auto;">
 </button>
 
 <script>
@@ -585,13 +593,15 @@ homeBtn.addEventListener('click',()=>{
 
 // Credits close
 closeCreditsBtn.addEventListener('click', () => {
-    creditsView.style.display = 'none';
-    // Restore main UI elements
-    clockContainer.style.display = 'flex';
-    dock.style.display = 'flex';
-    searchContainer.style.display = 'block';
-    iframeView.style.display = 'none';
-    homeBtn.style.display = 'none';
+  creditsView.style.display = 'none';
+  // Restore main UI elements
+  clockContainer.style.display = 'flex';
+  dock.style.display = 'flex';
+  searchContainer.style.display = 'block';
+  iframeView.style.display = 'none';
+  homeBtn.style.display = 'none';
+  // Refresh the page
+  location.reload();
 });
 
 // Settings toggle
