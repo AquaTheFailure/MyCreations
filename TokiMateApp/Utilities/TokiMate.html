@@ -27,7 +27,109 @@ body {
 #welcomeName {margin-top:10px; font-size:24px; font-weight:500; opacity:0.85; text-shadow:0 0 10px rgba(0,0,0,0.3);}
 
 #analogClock {display:none; position:relative; width:220px; height:220px; border:10px solid rgba(255,255,255,0.6); border-radius:50%; background: rgba(255,255,255,0.05); box-shadow:0 0 40px rgba(255,255,255,0.2) inset;}
-.hand {position:absolute; width:50%; height:4px; background:white; top:50%; transform-origin:100%; transform:rotate(90deg); transition: transform 0.5s ease-in-out;}
+.hand {
+  position: absolute;
+  width: 50%;
+  height: 4px;
+  background: white;
+  top: 50%;
+  transform-origin: 100% 50%;
+  }
+  /* Outline for welcome text */
+  body:has(.app-black) #welcomeName{
+    -webkit-text-stroke: 0.5px rgba(0,0,0,0.95);
+    text-shadow:
+      -1px -1px 0 rgba(0,0,0,0.95),
+       1px -1px 0 rgba(0,0,0,0.95),
+      -1px  1px 0 rgba(0,0,0,0.95),
+       1px  1px 0 rgba(0,0,0,0.95),
+      0    0   6px rgba(0,0,0,0.35);
+    transition: text-shadow .18s ease, -webkit-text-stroke .18s ease;
+  }
+
+    /* When dock apps use the .app-black style replace the visible <img>
+       with a dark-mode SVG provided in the repository's
+       TokiMateApp/Utilities/Dark Mode Icons folder. We hide the original
+       <img> and use the dock tile background to show the alternate icon. */
+    .dock-app.app-black img {
+      opacity: 0;
+      transition: opacity 0.18s ease;
+      pointer-events: none;
+    }
+
+    /* Ensure the dock tile centers the replacement icon */
+    .dock-app.app-black {
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 48px 48px;
+    }
+
+    /* Per-app replacements (use the Dark Mode Icons folder) */
+    .dock-app.app-black[data-app="Browser"] {
+      background-image: url("https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/browser_icon_dark.svg");
+    }
+    .dock-app.app-black[data-app="Mail"] {
+      background-image: url("https://github.com/AquaTheFailure/MyCreations/raw/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/mail_icon_dark.svg");
+    }
+    .dock-app.app-black[data-app="Music"] {
+      background-image: url("https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/music_player.svg");
+    }
+    .dock-app.app-black[data-app="Photos"] {
+      background-image: url("https://github.com/AquaTheFailure/MyCreations/raw/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/Pictures_icon_dark.svg");
+    }
+    .dock-app.app-black[data-app="Skribbl"] {
+      background-image: url("https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/Skribbl_icon_dark.svg");
+    }
+    .dock-app.app-black[data-app="Credits"] {
+      background-image: url("https://github.com/AquaTheFailure/MyCreations/raw/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/info_icon_dark.svg");
+    }
+    /* Fullscreen & Home (if present) */
+    .dock-app.app-black#fullscreenDockBtn {
+      background-image: url("https://github.com/AquaTheFailure/MyCreations/raw/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/fullscreen_icon.svg");
+    }
+    
+  .hand{
+  transform: rotate(90deg);
+  transition: transform 0.5s ease-in-out;
+}
+
+/* Variables for overlay and transitions */
+:root{
+  --black-overlay-color: rgba(0, 0, 0, 0.233); /* almost transparent dark layer */
+  --black-overlay-fade: 420ms cubic-bezier(.22,.9,.2,1);
+}
+
+/* Full-page dark overlay that fades in/out when "black" style is active.
+   Uses the :has() relational selector to detect any element with .app-black
+   (the applySettings logic adds that class to dock icons). */
+body::before{
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4; /* below UI elements that should still sit above */
+  background: transparent;
+  opacity: 0;
+  transition: opacity var(--black-overlay-fade), background var(--black-overlay-fade);
+  will-change: opacity, background;
+}
+
+/* When any .app-black exists in the document, show the overlay.
+   This provides a smooth fade without modifying existing JS. */
+body:has(.app-black)::before{
+  background: var(--black-overlay-color);
+  opacity: 1;
+}
+
+/* Ensure the main UI pieces smoothly animate their background/color changes
+   when the JS applies inline styles for black mode. */
+#clockContainer,
+#dock,
+#settingsPanel,
+#clock,
+#welcomeName {
+  transition: background var(--black-overlay-fade), color var(--black-overlay-fade), box-shadow var(--black-overlay-fade), transform 260ms ease;
+}
 .hourHand {height:6px;} .minuteHand {height:4px;} .secondHand {height:2px; background:#f43f5e;}
 
 #settingsPanel {
