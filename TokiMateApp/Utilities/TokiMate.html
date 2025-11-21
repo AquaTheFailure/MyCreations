@@ -235,8 +235,37 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
   position:fixed;top:30px;left:50%;transform:translateX(-50%);z-index:50;width:400px;
 }
 #appSearch {
-  width:100%;padding:10px 15px;border-radius:20px;border:none;font-size:16px;outline:none;
-  box-shadow:0 5px 20px rgba(0,0,0,0.3);backdrop-filter: blur(10px);background:rgba(255,255,255,0.15);color:white;
+  width:100%;
+  padding:10px 15px;
+  border-radius:20px;
+  border:none;
+  font-size:16px;
+  outline:none;
+  box-shadow:0 5px 20px rgba(0,0,0,0.3);
+  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.15);
+  color:#0c2a47; /* text color when NOT in black mode */
+  -webkit-text-fill-color: #8ac5ff;
+  transition: background var(--black-overlay-fade), backdrop-filter var(--black-overlay-fade), box-shadow var(--black-overlay-fade), color var(--black-overlay-fade), -webkit-text-fill-color var(--black-overlay-fade);
+}
+
+/* match placeholder transition with the input text */
+#appSearch::placeholder {
+  color: rgba(12,42,71,0.65);
+  transition: color var(--black-overlay-fade);
+}
+
+/* ensure placeholder becomes readable in black mode */
+body:has(.app-black) #appSearch::placeholder {
+  color: rgba(255,255,255,0.85);
+}
+
+/* When black mode is active, use a dark blurred transparent panel (#0a1620) and smoothly transition */
+body:has(.app-black) #appSearch {
+  background: rgba(10,22,32,0.62); /* #0a1620 with transparency */
+  backdrop-filter: blur(12px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+  color: #ffffff;
 }
 #searchSuggestions {
   margin-top:5px;background:rgba(0,0,0,0.7);border-radius:10px;display:none;max-height:200px;overflow-y:auto;
@@ -646,8 +675,7 @@ function getAppURL(appName){
   switch(appName){
     case 'Browser': return 'https://www.google.com';
     case 'Mail': return 'https://mail.google.com';
-    // Open local mp3.html instead of redirecting to music.youtube.com
-    case 'Music': return 'file:///home/Slimee5661/Documents/Aqua%20The%20Failure/Resources/mp3.html';
+    case 'Music': return 'https://github.com/AquaTheFailure/MyCreations/blob/main/TokiMateApp/Utilities/Resources/mp3.html';
     case 'Photos': return 'https://photos.google.com';
     case 'Skribbl': return 'https://skribbl.io';
     default: return '';
