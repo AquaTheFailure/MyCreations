@@ -646,7 +646,75 @@ appSearch.addEventListener('keydown', e => {
     searchSuggestions.style.display='none';
   }
 });
+(function(){
+  const _origApply = window.applySettings;
+  if (typeof _origApply !== 'function') return;
 
+  window.applySettings = function(){
+    _origApply();
+
+    const clockContainerEl = document.getElementById('clockContainer');
+    const dockEl = document.getElementById('dock');
+    const clockEl = document.getElementById('clock');
+    const welcomeEl = document.getElementById('welcomeName');
+    const dockLabels = document.querySelectorAll('.dock-label');
+
+    const blackHex = '#0f1c2b';
+    const fontHex = '#17355e';
+
+    if (settings && settings.appStyle === 'black') {
+      // Apply the darker blurred backgrounds and font color
+      if (clockContainerEl) {
+        clockContainerEl.style.background = `${blackHex}`;
+        clockContainerEl.style.backdropFilter = 'blur(18px)';
+        clockContainerEl.style.color = fontHex;
+      }
+
+      if (dockEl) {
+        dockEl.style.background = `${blackHex}`;
+        dockEl.style.backdropFilter = 'blur(18px)';
+        dockEl.style.color = fontHex;
+      }
+
+      if (clockEl) {
+        clockEl.style.color = fontHex;
+        // black outline using multiple text-shadow offsets + subtle black glow
+        clockEl.style.textShadow =
+          '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 6px rgba(0,0,0,0.55)';
+        // enhance in browsers that support it
+        clockEl.style.webkitTextStroke = '0.6px #000';
+      }
+
+      if (welcomeEl) welcomeEl.style.color = fontHex;
+      dockLabels.forEach(l => l.style.color = fontHex);
+
+      // Small visual polish for dock icons when in black mode
+      document.querySelectorAll('.dock-app').forEach(app=>{
+        app.style.boxShadow = '0 10px 30px rgba(0,0,0,0.45)';
+      });
+    } else {
+      // Reset inline styles when leaving black mode
+      [clockContainerEl, dockEl, clockEl, welcomeEl].forEach(el=>{
+        if (!el) return;
+        el.style.background = '';
+        el.style.backdropFilter = '';
+        el.style.color = '';
+      });
+      // remove outline/glow and optional webkit stroke
+      if (clockEl) {
+        clockEl.style.textShadow = '';
+        clockEl.style.webkitTextStroke = '';
+      }
+      dockLabels.forEach(l => l.style.color = '');
+      document.querySelectorAll('.dock-app').forEach(app=>{
+        app.style.boxShadow = '';
+      });
+    }
+  };
+
+  // Re-run to ensure current state is applied on load
+  applySettings();
+})();
 </script>
 </body>
 </html>
