@@ -8,136 +8,196 @@
 <style>
 * {margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif;}
 html, body {height:100%; overflow:hidden;}
+/* Intro animation + font */
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap');
 
-body {
-  background: url("https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/de917977268563.5c829061be1d3.gif") center/cover no-repeat;
-  display:flex; justify-content:center; align-items:center; flex-direction:column;
-  color:white; transition:background 0.5s, opacity 1s ease-in-out;
-  opacity: 0;
+:root {
+    --intro-z: 9999;
+}
+</style>
+<script>
+try { sessionStorage.removeItem('toki_intro_shown'); } catch(e) { /* ignore */ }
+</script>
+<style>
+/* Intro mode hides the main UI so only the background is visible */
+body.intro-mode #clockContainer,
+body.intro-mode #dock,
+body.intro-mode #settingsPanel,
+body.intro-mode #searchContainer,
+body.intro-mode #iframeView,
+body.intro-mode #creditsView,
+body.intro-mode #homeBtn,
+body.intro-mode #namePrompt,
+body.intro-mode #roomPrompt {
+        display: none !important;
 }
 
+/* Intro overlay container (transparent so background shows) */
+#introOverlay {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: auto;
+        z-index: var(--intro-z);
+        user-select: none;
+        -webkit-user-select: none;
+        cursor: pointer;
+}
+
+/* Day (cursive) placed near top middle */
+#introOverlay .introDay {
+        font-family: 'Dancing Script', cursive;
+        color: rgba(255,255,255,0.95);
+        font-size: clamp(28px, 6vw, 64px);
+        letter-spacing: 0.6px;
+        text-align: center;
+        text-shadow: 0 6px 30px rgba(0,0,0,0.55);
+        transform: translateY(-10vh);
+        animation: introSlideIn 900ms cubic-bezier(.2,.9,.27,1) both;
+}
+
+/* Numeric date below the day, smaller and monospaced-ish */
+#introOverlay .introDate {
+        margin-top: 18px;
+        color: rgba(255,255,255,0.9);
+        font-size: clamp(16px, 3.5vw, 22px);
+        font-weight: 600;
+        text-align: center;
+        text-shadow: 0 4px 18px rgba(0,0,0,0.45);
+        transform: translateY(-9vh);
+        animation: introSlideIn 1050ms cubic-bezier(.2,.9,.27,1) both;
+}
+
+/* A subtle animated underline / ring to make it feel alive */
+#introOverlay .introAccent {
+        margin-top: 26px;
+        width: 120px;
+        height: 2px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.45));
+        transform: translateY(-8.5vh);
+        animation: introPulse 1400ms ease-in-out infinite;
+        opacity: 0.9;
+}
+
+/* Intro fade-out class applied when user clicks */
+#introOverlay.fadeOut {
+        animation: introFadeOut 450ms ease-in forwards;
+        pointer-events: none;
+}
+
+/* Keyframes */
+@keyframes introSlideIn {
+        0% { opacity: 0; transform: translateY(-20vh) scale(0.98); }
+        60% { opacity: 1; transform: translateY(-9vh) scale(1.01); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes introPulse {
+        0% { transform: translateY(-8.5vh) scaleX(0.9); opacity: 0.8; }
+        50% { transform: translateY(-8.5vh) scaleX(1.05); opacity: 1; }
+        100% { transform: translateY(-8.5vh) scaleX(0.9); opacity: 0.8; }
+}
+
+@keyframes introFadeOut {
+        0% { opacity: 1; transform: scale(1); filter: blur(0px); }
+        100% { opacity: 0; transform: scale(0.98); filter: blur(6px); }
+}
+
+/* Small helper to ensure the overlay doesn't block keyboard focus when hidden */
+body:not(.intro-mode) #introOverlay { display: none !important; }
+
+body {
+    display:flex; justify-content:center; align-items:center; flex-direction:column;
+    color:white; transition:background 0.5s, opacity 1s ease-in-out;
+    opacity: 0;
+    cursor: url('data:image/x-icon;base64,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'), auto;
+}
+
+/* Rest mode animations */
+@keyframes moveClockToTop {
+    from {
+        transform: translate(0, 0) scale(1);
+    }
+    to {
+        transform: translate(-50%, -45vh) scale(0.6);
+        position: fixed;
+        top: 50%;
+        left: 50%;
+    }
+}
+
+@keyframes fadeDock {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(100px);
+    }
+}
+
+/* Rest mode hides UI leaving only the background */
+body.resting #clockContainer {
+    animation: moveClockToTop 0.6s ease-in-out forwards;
+}
+
+body.resting #dock {
+    animation: fadeDock 0.5s ease-in-out forwards;
+}
+
+body.resting #settingsPanel,
+body.resting #searchContainer,
+body.resting #iframeView,
+body.resting #creditsView,
+body.resting #homeBtn,
+body.resting #namePrompt,
+body.resting #roomPrompt {
+    display: none !important;
+}
+
+/* Exit Rest floating button */
+#exitRestBtn {
+    position: fixed;
+    right:20px;
+    bottom:20px;
+    z-index:60;
+    padding:10px 14px;
+    border-radius:12px;
+    background:rgba(0,0,0,0.5);
+    color:white;
+    border:none;
+    cursor:pointer;
+    font-weight:600;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    backdrop-filter: blur(8px);
+    display:none;
+}
+
+/* small rest icon style in dock */
+#restBtn { font-size:28px; display:flex; justify-content:center; align-items:center; }
+
+/* existing styles */
 #clockContainer {
-  position: relative; cursor:pointer; padding:50px 80px; border-radius:40px;
-  background: rgba(255,255,255,0.1); backdrop-filter: blur(20px);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-  display:flex; flex-direction:column; justify-content:center; align-items:center; transition: transform 0.3s;
+    position: relative; cursor:pointer; padding:50px 80px; border-radius:40px;
+    background: rgba(255,255,255,0.1); backdrop-filter: blur(20px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    display:flex; flex-direction:column; justify-content:center; align-items:center; transition: transform 0.3s;
 }
 #clockContainer:hover {transform:scale(1.05);}
 #clock {font-size:100px; font-weight:700; text-shadow:0 0 20px rgba(0,0,0,0.5),0 0 10px rgba(255,255,255,0.2);}
 #welcomeName {margin-top:10px; font-size:24px; font-weight:500; opacity:0.85; text-shadow:0 0 10px rgba(0,0,0,0.3);}
 
-#analogClock {display:none; position:relative; width:220px; height:220px; border:10px solid rgba(255,255,255,0.6); border-radius:50%; background: rgba(255,255,255,0.05); box-shadow:0 0 40px rgba(255,255,255,0.2) inset;}
-.hand {
-  position: absolute;
-  width: 50%;
-  height: 4px;
-  background: white;
-  top: 50%;
-  transform-origin: 100% 50%;
-  }
-  /* Outline for welcome text */
-  body:has(.app-black) #welcomeName{
-    -webkit-text-stroke: 0.5px rgba(0,0,0,0.95);
-    text-shadow:
-      -1px -1px 0 rgba(0,0,0,0.95),
-       1px -1px 0 rgba(0,0,0,0.95),
-      -1px  1px 0 rgba(0,0,0,0.95),
-       1px  1px 0 rgba(0,0,0,0.95),
-      0    0   6px rgba(0,0,0,0.35);
-    transition: text-shadow .18s ease, -webkit-text-stroke .18s ease;
-  }
-
-    /* When dock apps use the .app-black style replace the visible <img>
-       with a dark-mode SVG provided in the repository's
-       TokiMateApp/Utilities/Dark Mode Icons folder. We hide the original
-       <img> and use the dock tile background to show the alternate icon. */
-    .dock-app.app-black img {
-      opacity: 0;
-      transition: opacity 0.18s ease;
-      pointer-events: none;
-    }
-
-    /* Ensure the dock tile centers the replacement icon */
-    .dock-app.app-black {
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: 48px 48px;
-    }
-
-    /* Per-app replacements (use the Dark Mode Icons folder) */
-    .dock-app.app-black[data-app="Browser"] {
-      background-image: url("https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/browser_icon_dark.svg");
-    }
-    .dock-app.app-black[data-app="Mail"] {
-      background-image: url("https://github.com/AquaTheFailure/MyCreations/raw/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/mail_icon_dark.svg");
-    }
-    .dock-app.app-black[data-app="Music"] {
-      background-image: url("https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/music_player.svg");
-    }
-    .dock-app.app-black[data-app="Photos"] {
-      background-image: url("https://github.com/AquaTheFailure/MyCreations/raw/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/Pictures_icon_dark.svg");
-    }
-    .dock-app.app-black[data-app="Skribbl"] {
-      background-image: url("https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/Skribbl_icon_dark.svg");
-    }
-    .dock-app.app-black[data-app="Credits"] {
-      background-image: url("https://github.com/AquaTheFailure/MyCreations/raw/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/info_icon_dark.svg");
-    }
-    /* Fullscreen & Home (if present) */
-    .dock-app.app-black#fullscreenDockBtn {
-      background-image: url("https://github.com/AquaTheFailure/MyCreations/raw/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/fullscreen_icon.svg");
-    }
-    
-  .hand{
-  transform: rotate(90deg);
-  transition: transform 0.5s ease-in-out;
-}
-
-/* Variables for overlay and transitions */
-:root{
-  --black-overlay-color: rgba(0, 0, 0, 0.233); /* almost transparent dark layer */
-  --black-overlay-fade: 420ms cubic-bezier(.22,.9,.2,1);
-}
-
-/* Full-page dark overlay that fades in/out when "black" style is active.
-   Uses the :has() relational selector to detect any element with .app-black
-   (the applySettings logic adds that class to dock icons). */
-body::before{
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 4; /* below UI elements that should still sit above */
-  background: transparent;
-  opacity: 0;
-  transition: opacity var(--black-overlay-fade), background var(--black-overlay-fade);
-  will-change: opacity, background;
-}
-
-/* When any .app-black exists in the document, show the overlay.
-   This provides a smooth fade without modifying existing JS. */
-body:has(.app-black)::before{
-  background: var(--black-overlay-color);
-  opacity: 1;
-}
-
-/* Ensure the main UI pieces smoothly animate their background/color changes
-   when the JS applies inline styles for black mode. */
-#clockContainer,
-#dock,
-#settingsPanel,
-#clock,
-#welcomeName {
-  transition: background var(--black-overlay-fade), color var(--black-overlay-fade), box-shadow var(--black-overlay-fade), transform 260ms ease;
-}
-.hourHand {height:6px;} .minuteHand {height:4px;} .secondHand {height:2px; background:#f43f5e;}
-
 #settingsPanel {
-  position: fixed; top:0; right:-400px; height:100%; width:400px;
-  background: rgba(0,0,0,0.85); backdrop-filter: blur(20px);
-  padding:30px; border-left:1px solid rgba(255,255,255,0.1);
-  box-shadow: -5px 0 30px rgba(0,0,0,0.5); color:white; transition: right 0.4s ease;
-  overflow-y:auto; z-index:20;
+    position: fixed; top:0; right:-400px; height:100%; width:400px;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(20px);
+    padding:30px; border-left:1px solid rgba(255,255,255,0.1);
+    box-shadow: -5px 0 30px rgba(0,0,0,0.5); color:white; transition: right 0.4s ease;
+    overflow-y:auto; z-index:20;
 }
 #settingsPanel.active { right:0; }
 label {display:block; margin:15px 0 5px; font-weight:500;}
@@ -146,23 +206,41 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
 #iframeView {position:absolute; top:0; left:0; width:100%; height:100%; border:none; display:none; z-index:10; background:white;}
 
 #creditsView {
-  display:none; position:absolute; top:0; left:0; width:100%; height:100%;
-  background: rgba(0,0,0,0.95); color:white; z-index:15;
-  overflow:auto; padding:50px; box-sizing:border-box; transition: opacity 0.3s ease;
+    display:none; position:absolute; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.95); color:white; z-index:15;
+    overflow:auto; padding:50px; box-sizing:border-box; transition: opacity 0.3s ease;
 }
 #creditsView h1 { font-size: 36px; margin-bottom:20px;}
 #creditsView ul { margin-left:20px; }
 #creditsView button { position:absolute; top:20px; right:20px; padding:10px 15px; font-size:16px; border:none; border-radius:10px; background:#f43f5e; color:white; cursor:pointer;}
 
 #dock {
-  position: fixed; bottom:30px; left:50%; transform:translateX(-50%);
-  display:flex; gap:20px; align-items:flex-end; padding:15px 25px;
-  border-radius:40px; background: rgba(255,255,255,0.15); backdrop-filter: blur(25px);
-  box-shadow:0 10px 40px rgba(0,0,0,0.4); z-index:10;
+    position: fixed; bottom:30px; left:50%; transform:translateX(-50%);
+    display:flex; gap:20px; align-items:flex-end; padding:15px 25px;
+    border-radius:40px; background: rgba(255,255,255,0.15); backdrop-filter: blur(25px);
+    box-shadow:0 10px 40px rgba(0,0,0,0.4); z-index:10;
+
+    /* Smooth transitions for seamless mode toggles */
+    transition: background-color 360ms cubic-bezier(.2,.9,.27,1), 
+                box-shadow 360ms cubic-bezier(.2,.9,.27,1),
+                transform 220ms cubic-bezier(.2,.9,.27,1);
+}
+
+/* When dock contains any .app-black icon (modern browsers supporting :has()) */
+#dock:has(.app-black) {
+    background-color: #00012d9d;
+    box-shadow: 0 14px 56px rgba(0,1,45,0.65);
+}
+
+/* Fallback selectors in case a theme class/attribute is added to body in the future */
+body.theme-black #dock,
+body[data-appstyle="black"] #dock {
+    background-color: #00012d9d;
+    box-shadow: 0 14px 56px rgba(0,1,45,0.65);
 }
 .dock-app { flex:0 0 auto; width:70px; height:70px; border-radius:20px;
-  display:flex; flex-direction:column; justify-content:center; align-items:center; font-size:30px; color:#333; cursor:pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease; position:relative;
+    display:flex; flex-direction:column; justify-content:center; align-items:center; font-size:30px; color:#333; cursor:pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease; position:relative;
 }
 .dock-app:hover { transform: scale(1.08); box-shadow:0 10px 25px rgba(0,0,0,0.4);}
 .dock-app img { width:48px; height:48px; pointer-events:none; object-fit:contain; }
@@ -171,60 +249,59 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
 /* App icon backgrounds */
 .app-light { background: rgba(255,255,255,0.9); }
 .app-mirror { background: rgba(255,255,255,0.3); backdrop-filter: blur(5px); }
-.app-black { background: rgba(0, 0, 0, 0.48); }
+.app-black { background: rgba(0,0,0,0.7); }
 
 /* Small Home button */
 #homeBtn {
-  position: fixed; bottom:20px; left:20px; width:50px; height:50px;
-  border-radius:50%; background: rgba(255,255,255,0.2); border:none; color:white; font-size:24px; cursor:pointer; display:none; z-index:25;
-  display:none; overflow:visible;
-  transition: transform .25s cubic-bezier(.2,.9,.2,1), box-shadow .25s ease, background-color .25s ease;
-  will-change: transform, box-shadow;
+    position: fixed; bottom:20px; left:20px; width:50px; height:50px;
+    border-radius:50%; background: rgba(255,255,255,0.2); border:none; color:white; font-size:24px; cursor:pointer; display:none; z-index:25;
+    display:none; overflow:visible;
+    transition: transform .25s cubic-bezier(.2,.9,.2,1), box-shadow .25s ease, background-color .25s ease;
+    will-change: transform, box-shadow;
 }
 #homeBtn img { transition: transform .25s ease; display:block; width:28px; height:28px; margin:auto; }
 
 #homeBtn:hover{
-  transform: translateY(-6px) scale(1.08);
-  box-shadow: 0 12px 30px rgba(79,70,229,0.18), 0 4px 10px rgba(0,0,0,0.35), 0 0 14px rgba(244,63,94,0.10);
-  background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.12));
+    transform: translateY(-6px) scale(1.08);
+    box-shadow: 0 12px 30px rgba(79,70,229,0.18), 0 4px 10px rgba(0,0,0,0.35), 0 0 14px rgba(244,63,94,0.10);
+    background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.12));
 }
 #homeBtn:hover img{ transform: rotate(-8deg) scale(1.04); }
 
-/* Subtle glowing ring animation */
 #homeBtn::after{
-  content: "";
-  position: absolute;
-  left: 50%; top: 50%;
-  width: 90%; height: 90%;
-  transform: translate(-50%,-50%) scale(1);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: -1;
-  background: radial-gradient(circle at center, rgba(79,70,229,0.18) 0%, rgba(244,63,94,0.06) 35%, transparent 60%);
-  opacity: 0;
-  transition: opacity .25s ease, transform .4s ease;
+    content: "";
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 90%; height: 90%;
+    transform: translate(-50%,-50%) scale(1);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: -1;
+    background: radial-gradient(circle at center, rgba(79,70,229,0.18) 0%, rgba(244,63,94,0.06) 35%, transparent 60%);
+    opacity: 0;
+    transition: opacity .25s ease, transform .4s ease;
 }
 #homeBtn:hover::after{
-  opacity: 1;
-  transform: translate(-50%,-50%) scale(1.45);
-  animation: pulseRing 900ms ease-out;
+    opacity: 1;
+    transform: translate(-50%,-50%) scale(1.45);
+    animation: pulseRing 900ms ease-out;
 }
 
 @keyframes pulseRing {
-  0%   { transform: translate(-50%,-50%) scale(1);   opacity: .9;  }
-  60%  { transform: translate(-50%,-50%) scale(1.9); opacity: .18; }
-  100% { transform: translate(-50%,-50%) scale(2.6); opacity: 0;   }
+    0%   { transform: translate(-50%,-50%) scale(1);   opacity: .9;  }
+    60%  { transform: translate(-50%,-50%) scale(1.9); opacity: .18; }
+    100% { transform: translate(-50%,-50%) scale(2.6); opacity: 0;   }
 }
 
 /* Name prompt modal */
 #namePrompt {
-  position:fixed; top:0; left:0; width:100%; height:100%;
-  background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
-  display:flex; justify-content:center; align-items:center; z-index:50;
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+    display:flex; justify-content:center; align-items:center; z-index:50;
 }
 #nameBox {
-  background: rgba(255,255,255,0.15); padding:40px; border-radius:30px;
-  backdrop-filter: blur(20px); text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.4);
+    background: rgba(255,255,255,0.15); padding:40px; border-radius:30px;
+    backdrop-filter: blur(20px); text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.4);
 }
 #nameBox h2 {margin-bottom:15px; color:white;}
 #nameInput {padding:10px 15px; border:none; border-radius:10px; width:80%; font-size:16px; margin-bottom:15px;}
@@ -232,344 +309,378 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
 
 /* Spotlight search */
 #searchContainer {
-  position:fixed;top:30px;left:50%;transform:translateX(-50%);z-index:50;width:400px;
+    position:fixed;top:30px;left:50%;transform:translateX(-50%);z-index:50;width:400px;
 }
 #appSearch {
-  width:100%;
-  padding:10px 15px;
-  border-radius:20px;
-  border:none;
-  font-size:16px;
-  outline:none;
-  box-shadow:0 5px 20px rgba(0,0,0,0.3);
-  backdrop-filter: blur(10px);
-  background: rgba(255,255,255,0.15);
-  color:#0c2a47; /* text color when NOT in black mode */
-  -webkit-text-fill-color: #8ac5ff;
-  transition: background var(--black-overlay-fade), backdrop-filter var(--black-overlay-fade), box-shadow var(--black-overlay-fade), color var(--black-overlay-fade), -webkit-text-fill-color var(--black-overlay-fade);
-}
-
-/* match placeholder transition with the input text */
-#appSearch::placeholder {
-  color: rgba(12,42,71,0.65);
-  transition: color var(--black-overlay-fade);
-}
-
-/* ensure placeholder becomes readable in black mode */
-body:has(.app-black) #appSearch::placeholder {
-  color: rgba(255,255,255,0.85);
-}
-
-/* When black mode is active, use a dark blurred transparent panel (#0a1620) and smoothly transition */
-body:has(.app-black) #appSearch {
-  background: rgba(10,22,32,0.62); /* #0a1620 with transparency */
-  backdrop-filter: blur(12px);
-  box-shadow: 0 6px 24px rgba(0,0,0,0.6);
-  color: #ffffff;
+    width:100%;padding:10px 15px;border-radius:20px;border:none;font-size:16px;outline:none;
+    box-shadow:0 5px 20px rgba(0,0,0,0.3);backdrop-filter: blur(10px);background:rgba(255,255,255,0.15);color:white;
 }
 #searchSuggestions {
-  margin-top:5px;background:rgba(0,0,0,0.7);border-radius:10px;display:none;max-height:200px;overflow-y:auto;
+    margin-top:5px;background:rgba(0,0,0,0.7);border-radius:10px;display:none;max-height:200px;overflow-y:auto;
 }
-#searchSuggestions div {padding:8px 12px;cursor:pointer;color:white;}
+#searchSuggestions div {Padding:8px 12px;cursor:pointer;color:white;}
 #searchSuggestions div:hover {background:rgba(255,255,255,0.2);}
+
+/* Room Code Popup (initially hidden) */
+#roomPrompt {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
+    display: none; justify-content: center; align-items: center;
+    z-index: 100;
+}
+#roomBox {
+    background: rgba(255,255,255,0.15); padding: 35px; border-radius: 25px;
+    backdrop-filter: blur(20px); text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+#roomBox h2 { color: white; margin-bottom: 15px; }
+#roomInput {
+    width: 80%; padding: 10px;
+    border-radius: 10px; border: none; margin-bottom: 20px;
+}
+.roomBtn {
+    padding: 10px 20px; border: none; border-radius: 10px;
+    margin: 5px; cursor: pointer; font-weight: 600;
+}
+#joinRoomBtn { background: #4ade80; color: black; }
+#cancelRoomBtn { background: #f87171; color: white; }
 </style>
 </head>
-<body>
+<body class="intro-mode">
 
-<div id="clockContainer">
-  <div id="clock">00:00:00</div>
-  <div id="analogClock">
-    <div class="hand hourHand"></div>
-    <div class="hand minuteHand"></div>
-    <div class="hand secondHand"></div>
-  </div>
-  <div id="welcomeName"></div>
+<div id="clockContainer" style="transition: background-color 360ms cubic-bezier(.2,.9,.27,1), box-shadow 360ms cubic-bezier(.2,.9,.27,1), transform 0.3s; background: rgba(255,255,255,0.1);">
+    <div id="clock">00:00:00</div>
+    <div id="analogClock">
+        <div class="hand hourHand"></div>
+        <div class="hand minuteHand"></div>
+        <div class="hand secondHand"></div>
+    </div>
+    <div id="welcomeName"></div>
 </div>
+
+<script>
+(function(){
+  const cc = document.getElementById('clockContainer');
+  if(!cc) return;
+
+  // Apply the proper background/box-shadow when "black mode" is active.
+  function updateClockBackground(){
+    const hasDockBlack = !!document.querySelector('.dock-app.app-black');
+    const bodyThemeBlack = document.body.classList.contains('theme-black') || document.body.dataset.appstyle === 'black' || document.body.dataset.appStyle === 'black';
+    if(hasDockBlack || bodyThemeBlack){
+      cc.style.backgroundColor = '#00012d9d';
+      cc.style.boxShadow = '0 20px 60px rgba(0,1,45,0.65)';
+    } else {
+      cc.style.backgroundColor = 'rgba(255,255,255,0.1)';
+      cc.style.boxShadow = '0 20px 60px rgba(0,0,0,0.4)';
+    }
+  }
+(function(){
+    // wrap the existing updater so we can add color handling without changing the original
+    const _origUpdate = updateClockBackground;
+    updateClockBackground = function(){
+        // call original behaviour first
+        _origUpdate && _origUpdate();
+
+        // ensure we have the elements
+        const clockEl = document.getElementById('clock');
+        if(!cc) return;
+
+        // ensure the transition includes color and matches the background timing/easing
+        const colorTransition = 'color 360ms cubic-bezier(.2,.9,.27,1)';
+        const existingTrans = cc.style.transition || '';
+        if(!/color/.test(existingTrans)){
+            // keep any existing transitions and append color
+            cc.style.transition = existingTrans
+                ? existingTrans.replace(/\s*,\s*$/, '') + ', ' + colorTransition
+                : 'background-color 360ms cubic-bezier(.2,.9,.27,1), box-shadow 360ms cubic-bezier(.2,.9,.27,1), ' + colorTransition + ', transform 0.3s';
+        }
+
+        // determine black-mode same way as the original function
+        const hasDockBlack = !!document.querySelector('.dock-app.app-black');
+        const bodyThemeBlack = document.body.classList.contains('theme-black') || document.body.dataset.appstyle === 'black' || document.body.dataset.appStyle === 'black';
+        const isBlack = hasDockBlack || bodyThemeBlack;
+
+        // apply the font color: dark when black mode, white otherwise
+        const fg = isBlack ? '#BB8AFF' : '#ffffff';
+        cc.style.color = fg;
+        if(clockEl) clockEl.style.color = fg;
+    };
+})();
+  // Initial set
+  updateClockBackground();
+
+  // Observe dock for class changes (when applySettings toggles app-* classes)
+  const dock = document.getElementById('dock');
+  if(dock){
+    const mo = new MutationObserver(updateClockBackground);
+    mo.observe(dock, { attributes: true, subtree: true, childList: true });
+  }
+
+  // React to storage changes (settings saved to localStorage) and a few user interactions
+  window.addEventListener('storage', updateClockBackground);
+  document.addEventListener('click', () => setTimeout(updateClockBackground, 50));
+  document.addEventListener('keydown', () => setTimeout(updateClockBackground, 50));
+})();
+</script>
 
 <!-- Name prompt -->
 <div id="namePrompt" style="display:none;">
-  <div id="nameBox">
-    <h2>Welcome! What's your name?</h2>
-    <input type="text" id="nameInput" placeholder="Enter your name">
-    <br>
-    <button id="saveNameBtn">Save</button>
-  </div>
+    <div id="nameBox">
+        <h2>Welcome! What's your name?</h2>
+        <input type="text" id="nameInput" placeholder="Enter your name">
+        <br>
+        <button id="saveNameBtn">Save</button>
+    </div>
 </div>
 
 <div id="settingsPanel">
-  <h2 style="display:flex; align-items:center; gap:10px;">
-    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Icons/settings.svg" alt="Settings Logo" style="width:30px; height:30px;">
-    Settings
-  </h2>
-  <label>Timezone:
-    <select id="timezoneSelect">
-      <option value="America/Chicago">Anna, Texas</option>
-      <option value="UTC">UTC</option>
-      <option value="America/New_York">New York</option>
-      <option value="Europe/London">London</option>
-      <option value="Asia/Tokyo">Tokyo</option>
-    </select>
-  </label>
-  <label>Clock Format:
-    <select id="formatSelect">
-      <option value="12">12-hour</option>
-      <option value="24">24-hour</option>
-    </select>
-  </label>
-  <label>Clock Style:
-    <select id="styleSelect">
-      <option value="digital">Digital</option>
-      <option value="analog">Analog</option>
-    </select>
-  </label>
-  <label>Background:
-    <select id="backgroundSelect">
-      <option value="digitalLandscape">Digital Landscape</option>
-      <option value="gradient1">Gradient 1</option>
-      <option value="gradient2">Gradient 2</option>
-      <option value="gradient3">Gradient 3</option>
-      <option value="custom">Custom (Upload)</option>
-    </select>
-  </label>
-
-  <!-- Hidden file input and preview for custom background -->
-  <input type="file" id="backgroundUpload" accept="image/*" style="display:none;">
-  <img id="bgPreview" alt="Background preview" style="display:none; width:100%; border-radius:12px; margin-top:10px; box-shadow:0 8px 30px rgba(0,0,0,0.4);">
-
-  <script>
-    (function(){
-      const bgSelect = document.getElementById('backgroundSelect');
-      const bgUpload = document.getElementById('backgroundUpload');
-      const bgPreview = document.getElementById('bgPreview');
-
-      function applyCustomBackground(dataUrl){
-        if(!dataUrl) return;
-        // persist the custom image and mark settings
-        try {
-          const s = JSON.parse(localStorage.getItem('desktopSettings') || '{}');
-          s.background = 'custom';
-          localStorage.setItem('desktopSettings', JSON.stringify(s));
-        } catch (e) {}
-        localStorage.setItem('customBackgroundImage', dataUrl);
-        document.body.style.background = `url('${dataUrl}') center/cover no-repeat fixed`;
-        document.body.style.backgroundAttachment = 'fixed';
-        bgPreview.src = dataUrl;
-        bgPreview.style.display = 'block';
-      }
-
-      // When user selects "Custom", immediately open file dialog
-      bgSelect.addEventListener('change', () => {
-        if (bgSelect.value === 'custom') {
-          // trigger file picker
-          bgUpload.click();
-        } else {
-          // hide preview for non-custom choices
-          bgPreview.style.display = 'none';
-        }
-      });
-
-      // Handle file selection and read as DataURL
-      bgUpload.addEventListener('change', (e) => {
-        const file = e.target.files && e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          applyCustomBackground(ev.target.result);
-        };
-        reader.readAsDataURL(file);
-      });
-
-      // On page load, if settings indicate a custom background, apply stored image
-      window.addEventListener('load', () => {
-        try {
-          const s = JSON.parse(localStorage.getItem('desktopSettings') || '{}');
-          const img = localStorage.getItem('customBackgroundImage');
-          if (s.background === 'custom' && img) {
-            // ensure the select shows custom
-            bgSelect.value = 'custom';
-            applyCustomBackground(img);
-          }
-        } catch (e) {}
-      });
-    })();
-  </script>
-  <label>App Icon Style:
-    <select id="appStyleSelect">
-      <option value="light">Light</option>
-      <option value="mirror">Mirror</option>
-      <option value="black">Black</option>
-    </select>
-  </label>
+    <h2 style="display:flex; align-items:center; gap:10px;">
+        <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Icons/settings.svg" alt="Settings Logo" style="width:30px; height:30px;">
+        Settings
+    </h2>
+    <label>Timezone:
+        <select id="timezoneSelect">
+            <option value="America/Chicago">Anna, Texas</option>
+            <option value="UTC">UTC</option>
+            <option value="America/New_York">New York</option>
+            <option value="Europe/London">London</option>
+            <option value="Asia/Tokyo">Tokyo</option>
+        </select>
+    </label>
+    <label>Background:
+        <select id="backgroundSelect">
+            <option value="digitalLandscape">Digital Landscape</option>
+            <option value="gradient1">Gradient 1</option>
+            <option value="gradient2">Gradient 2</option>
+            <option value="gradient3">Gradient 3</option>
+        </select>
+    </label>
+    <label>App Icon Style:
+        <select id="appStyleSelect">
+            <option value="light">Light</option>
+            <option value="mirror">Mirror</option>
+            <option value="black">Black</option>
+        </select>
+    </label>
 </div>
 
 <iframe id="iframeView"></iframe>
 
 <div id="creditsView">
-  <h1>Credits</h1>
-  <p>Special thanks to everyone who contributed:</p>
-  <ul>
-    <li>Emilio – SVG design</li>
-    <li>Tsukki – Concept and Implementation</li>
-  </ul>
-  <p>Made using HTML, CSS, and JavaScript. <br><br> Please Reload After Closing This.</p>
-  <button id="closeCredits">Close</button>
+    <h1>Credits</h1>
+    <p>Special thanks to everyone who contributed:</p>
+    <ul>
+        <li>Emilio – SVG design</li>
+        <li>Tsukki – Concept and Implementation</li>
+        <li>Cole – Testing & User Feedback</li>
+    </ul>
+    <p>Made using HTML, CSS, and JavaScript. <br><br> Please Reload After Closing This.</p>
+    <button id="closeCredits">Close</button>
 </div>
 
 <!-- Spotlight Search -->
 <div id="searchContainer">
-  <input type="text" id="appSearch" placeholder="Type to search apps...">
-  <div id="searchSuggestions"></div>
+    <input type="text" id="appSearch" placeholder="Type to search apps...">
+    <div id="searchSuggestions"></div>
 </div>
-
-<!-- Fullscreen toggle (adds a red-square button to the dock and enables a clean fullscreen wallpaper view) -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const dock = document.getElementById('dock');
-  if (!dock) return;
-
-  dock.appendChild(fsBtn);
-
-  function enableCleanFullscreen() {
-    // visually hide UI elements but keep background visible
-    document.body.classList.add('fullscreen-mode');
-    // request fullscreen for the whole document
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(()=>{/* ignore */});
-    }
-  }
-
-  function disableCleanFullscreen() {
-    document.body.classList.remove('fullscreen-mode');
-    if (document.fullscreenElement) {
-      document.exitFullscreen && document.exitFullscreen().catch(()=>{/* ignore */});
-    }
-  }
-
-  fsBtn.addEventListener('click', () => {
-    if (!document.fullscreenElement) enableCleanFullscreen();
-    else disableCleanFullscreen();
-  });
-
-  // Keep UI state in sync with native fullscreen changes (Esc or other triggers)
-  document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement) {
-      // exited fullscreen
-      document.body.classList.remove('fullscreen-mode');
-    } else {
-      // entered fullscreen (could be via F11 or other)
-      document.body.classList.add('fullscreen-mode');
-    }
-  });
-
-  // If user presses Esc and for some reason class remains, ensure cleanup
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !document.fullscreenElement) {
-      document.body.classList.remove('fullscreen-mode');
-    }
-  });
-});
-</script>
-
+<!-- Black-mode overlay: toggles a smooth, semi-transparent dark layer above the page background -->
+<div id="blackModeOverlay" aria-hidden="true"></div>
 <style>
-/* Smooth transitions and hide everything except wallpaper when in fullscreen-mode */
-.fullscreen-mode #dock,
-.fullscreen-mode #clockContainer,
-.fullscreen-mode #settingsPanel,
-.fullscreen-mode #iframeView,
-.fullscreen-mode #searchContainer,
-.fullscreen-mode #homeBtn,
-.fullscreen-mode #creditsView,
-.fullscreen-mode #namePrompt {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(8px) scale(.995);
-  transition: opacity .45s ease, transform .45s ease;
-}
-
-/* Ensure the background stays visible and transitions smoothly */
-html, body {
-  transition: background .6s ease, opacity .45s ease;
-}
-
-/* Hide iframe forcibly in fullscreen-mode to avoid any content overlay */
-.fullscreen-mode #iframeView { display: none !important; }
-
-/* Slight visual polish for the added dock button */
-#fullscreenDockBtn:hover { transform: translateY(-6px) scale(1.06); box-shadow:0 10px 25px rgba(255,255,255,0.9); }
+    /* Keep overlay non-interactive, above the page background but beneath UI chrome */
+    #blackModeOverlay{
+        position:fixed;
+        inset:0;
+        pointer-events:none;
+        background: rgba(0, 0, 0, 0.336); /* base darkness; final effect controlled via opacity */
+        opacity:0;
+        transition: opacity 360ms cubic-bezier(.2,.9,.27,1);
+        z-index:5; /* below UI elements (dock/settings/home have higher z-indexes) */
+        will-change: opacity;
+    }
+    /* Ensure intro hides overlay so it doesn't conflict with intro visuals */
+    body.intro-mode #blackModeOverlay{ display:none !important; }
 </style>
-<div id="dock">
-  <div class="dock-app app-light" data-app="Browser" data-url="TokiMate://Browser" title="Browser">
-    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Icons/browser_icon.svg" alt="Browser" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
-  </div>
-  <div class="dock-app app-light" data-app="Mail" data-url="TokiMate://Mail" title="Mail">
-    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Icons/mail_icon.svg" alt="Mail" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
-  </div>
-  <div class="dock-app app-light" data-app="Music" data-url="TokiMate://Music" title="Music">
-    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Icons/music_player.svg" alt="Music" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
-  </div>
-  <div class="dock-app app-light" data-app="Photos" data-url="TokiMate://Photos" title="Photos">
-    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Icons/Pictures_icon.svg" alt="Photos" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
-  </div>
-  <div class="dock-app app-light" data-app="Skribbl" data-url="TokiMate://Skribbl" title="Skribbl">
-    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Icons/Skribbl_icon.svg" alt="Skribbl" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
-  </div>
-  <div class="dock-app app-light" data-app="Credits" data-url="credits" title="Credits">
-    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Icons/info_icon.svg" alt="Credits" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
-  </div>
-
-  <!-- Fullscreen button added directly to the dock -->
-  <div class="dock-app app-black" id="fullscreenDockBtn" data-url="fullscreen" title="Toggle Fullscreen">
-    <img src="https://github.com/AquaTheFailure/MyCreations/raw/main/TokiMateApp/Utilities/Icons/fullscreen_icon.svg" alt="Fullscreen" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
-  </div>
-</div>
-
-<button id="homeBtn" title="Home">
-  <img src="https://github.com/AquaTheFailure/MyCreations/raw/main/TokiMateApp/Utilities/Icons/Home_icon.svg" alt="Home" style="width:28px;height:28px;display:block;margin:auto;">
-</button>
 
 <script>
 (function(){
-  const fsBtn = document.getElementById('fullscreenDockBtn');
-  if(!fsBtn) return;
+    const overlay = document.getElementById('blackModeOverlay');
 
-  function enableCleanFullscreen() {
-    document.body.classList.add('fullscreen-mode');
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(()=>{/* ignore */});
+    function isBlackModeActive(){
+        // Mirror the same checks used elsewhere in the app
+        const hasDockBlack = !!document.querySelector('.dock-app.app-black');
+        const bodyThemeBlack = document.body.classList.contains('theme-black') ||
+                                                     document.body.dataset.appstyle === 'black' ||
+                                                     document.body.dataset.appStyle === 'black';
+        // Also check the settings object if available (keeps behavior consistent during runtime edits)
+        const settingsObj = window.settings || (localStorage.getItem('desktopSettings') ? JSON.parse(localStorage.getItem('desktopSettings')) : null);
+        const settingsBlack = settingsObj && (settingsObj.appStyle === 'black' || settingsObj.appstyle === 'black');
+
+        return hasDockBlack || bodyThemeBlack || settingsBlack;
     }
-  }
 
-  function disableCleanFullscreen() {
-    document.body.classList.remove('fullscreen-mode');
-    if (document.fullscreenElement) {
-      document.exitFullscreen && document.exitFullscreen().catch(()=>{/* ignore */});
+    function updateBlackOverlay(){
+        if(!overlay) return;
+        // Keep overlay hidden during intro-mode
+        if(document.body.classList.contains('intro-mode')){
+            overlay.style.display = 'none';
+            return;
+        } else {
+            overlay.style.display = 'block';
+        }
+
+        if(isBlackModeActive()){
+            // fade in to create the illusion of the background darkening
+            overlay.style.opacity = '1';
+        } else {
+            // fade out returning the original background
+            overlay.style.opacity = '0';
+        }
     }
-  }
 
-  fsBtn.addEventListener('click', () => {
-    if (!document.fullscreenElement) enableCleanFullscreen();
-    else disableCleanFullscreen();
-  });
-
-  // Keep UI state in sync with native fullscreen changes (Esc or other triggers)
-  document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement) {
-      document.body.classList.remove('fullscreen-mode');
-    } else {
-      document.body.classList.add('fullscreen-mode');
+    // Observe relevant DOM changes so the overlay follows the same triggers as the clock/dock
+    const dock = document.getElementById('dock');
+    if(dock){
+        const mo = new MutationObserver(updateBlackOverlay);
+        mo.observe(dock, { attributes: true, subtree: true, childList: true });
     }
-  });
 
-  // If user presses Esc and for some reason class remains, ensure cleanup
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !document.fullscreenElement) {
-      document.body.classList.remove('fullscreen-mode');
-    }
-  });
+    // Observe body attribute changes (dataset/class toggles)
+    const bodyMo = new MutationObserver(updateBlackOverlay);
+    bodyMo.observe(document.body, { attributes: true, attributeFilter: ['class', 'data-appstyle', 'data-appStyle'] });
+
+    // React to settings saved via localStorage and common UI interactions
+    window.addEventListener('storage', updateBlackOverlay);
+    document.addEventListener('click', () => setTimeout(updateBlackOverlay, 50));
+    document.addEventListener('keydown', () => setTimeout(updateBlackOverlay, 50));
+
+    // Initial sync
+    updateBlackOverlay();
+
+    // Expose helper for other scripts (optional)
+    window.updateBlackOverlay = updateBlackOverlay;
 })();
 </script>
+<!-- Bottom dock -->
+<div id="dock">
+    <div class="dock-app app-light" data-app="Browser" data-url="TokiMate://Browser" title="Browser">
+        <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Icons/browser_icon.svg"
+             data-icon-light="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Icons/browser_icon.svg"
+             data-icon-dark="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Icons/browser_icon_dark.svg"
+             alt="Browser" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+    </div>
+    <div class="dock-app app-light" data-app="Mail" data-url="TokiMate://Mail" title="Mail">
+        <img src="https://github.com/AquaTheFailure/MyCreations/raw/refs/heads/main/TokiMateApp/Utilities/Icons/mail_icon.svg" alt="Mail" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+    </div>
+    <div class="dock-app app-light" data-app="Photos" data-url="TokiMate://Photos" title="Photos">
+        <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Icons/Pictures_icon.svg" alt="Photos" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+    </div>
+    <div class="dock-app app-light" data-app="Skribbl" data-url="TokiMate://Skribbl" title="Skribbl">
+        <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Icons/Skribbl_icon.svg" alt="Skribbl" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+    </div>
+
+    <!-- Rest / Fullscreen button added to dock -->
+    <div class="dock-app app-mirror" id="restBtn" title="Rest Mode" role="button" aria-label="Rest Mode">
+        <img src="https://github.com/AquaTheFailure/MyCreations/raw/refs/heads/main/TokiMateApp/Utilities/Icons/fullscreen_icon.svg" alt="Rest Mode" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+    </div>
+
+    <div class="dock-app app-light" data-app="Credits" data-url="credits" title="Credits">
+        <img src="https://github.com/AquaTheFailure/MyCreations/raw/refs/heads/main/TokiMateApp/Utilities/Icons/info_icon.svg" alt="Credits" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
+    </div>
+</div>
+<style>
+/* When dock apps use the .app-black style replace the visible <img>
+    with a dark-mode SVG provided in the repository's
+    TokiMateApp/Utilities/Dark Mode Icons folder. We hide the original
+    <img> and use the dock tile background to show the alternate icon. */
+.dock-app.app-black img {
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  pointer-events: none;
+}
+
+/* Ensure the dock tile centers the replacement icon */
+.dock-app.app-black {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 48px 48px;
+}
+
+/* Per-app replacements (use the Dark Mode Icons folder) */
+.dock-app.app-black[data-app="Browser"] {
+  background-image: url("https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/browser_icon_dark.svg");
+}
+.dock-app.app-black[data-app="Mail"] {
+  background-image: url("https://github.com/AquaTheFailure/MyCreations/raw/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/mail_icon_dark.svg");
+}
+.dock-app.app-black[data-app="Music"] {
+  background-image: url("https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/music_player.svg");
+}
+.dock-app.app-black[data-app="Photos"] {
+  background-image: url("https://github.com/AquaTheFailure/MyCreations/raw/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/Pictures_icon_dark.svg");
+}
+.dock-app.app-black[data-app="Skribbl"] {
+  background-image: url("https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/Skribbl_icon_dark.svg");
+}
+.dock-app.app-black[data-app="Credits"] {
+  background-image: url("https://github.com/AquaTheFailure/MyCreations/raw/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/info_icon_dark.svg");
+}
+/* Fullscreen & Home (if present) */
+.dock-app.app-black#restBtn {
+  background-image: url("https://github.com/AquaTheFailure/MyCreations/raw/refs/heads/main/TokiMateApp/Utilities/Dark%20Mode%20Icons/fullscreen_icon.svg");
+}
+</style>
+<button id="homeBtn" title="Home">
+    <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Icons/Home_icon.svg" alt="Home" style="width:28px;height:28px;display:block;margin:auto;">
+</button>
+
+<!-- Exit Rest Button -->
+<button id="exitRestBtn" aria-label="Exit rest mode">Exit</button>
+
+<!-- Room Code Prompt -->
+<div id="roomPrompt" style="display:none;">
+    <div id="roomBox">
+        <h2>Join a Skribbl Room</h2>
+        <input id="roomInput" type="text" placeholder="Enter room code (optional)">
+        <br>
+        <button class="roomBtn" id="joinRoomBtn">Join</button>
+        <button class="roomBtn" id="cancelRoomBtn">Cancel</button>
+    </div>
+</div>
 
 <script>
+(function(){
+    // Ensure closing credits fully restores interactive UI (fixes settings toggle after credits)
+    const closeBtn = document.getElementById('closeCredits');
+    if (!closeBtn) return;
+
+    closeBtn.addEventListener('click', () => {
+        // Let the original handler run first, then restore any inline styles that block interaction
+        setTimeout(() => {
+            const sp = document.getElementById('settingsPanel');
+            if (sp) {
+                sp.style.display = '';        // remove inline "display: none" if it was set
+                sp.classList.remove('active'); // ensure it's not stuck open/closed state
+            }
+
+            const search = document.getElementById('searchContainer');
+            if (search) search.style.display = '';
+
+            const cc = document.getElementById('clockContainer');
+            if (cc) cc.style.pointerEvents = '';
+
+            const dockEl = document.getElementById('dock');
+            if (dockEl) dockEl.style.pointerEvents = '';
+
+            const iframe = document.getElementById('iframeView');
+            if (iframe) iframe.style.pointerEvents = '';
+
+            // If fullscreen was used for credits, ensure page focus for input/clicks
+            try { window.focus(); } catch(e){/* ignore */ }
+        }, 40);
+    });
+})();
+
 window.addEventListener('load', () => document.body.style.opacity = '1');
 
 // Clock and Analog Hands
@@ -582,12 +693,12 @@ const secondHand=analogClock.querySelector('.secondHand');
 const clockContainer=document.getElementById('clockContainer');
 const settingsPanel=document.getElementById('settingsPanel');
 const timezoneSelect=document.getElementById('timezoneSelect');
-const formatSelect=document.getElementById('formatSelect');
 const styleSelect=document.getElementById('styleSelect');
 const backgroundSelect=document.getElementById('backgroundSelect');
 const appStyleSelect=document.getElementById('appStyleSelect');
 const iframeView=document.getElementById('iframeView');
 const dock=document.getElementById('dock');
+// FIX: ensure dockApps is defined before use
 const dockApps=document.querySelectorAll('.dock-app');
 const homeBtn=document.getElementById('homeBtn');
 const creditsView=document.getElementById('creditsView');
@@ -597,28 +708,51 @@ const namePrompt=document.getElementById('namePrompt');
 const nameInput=document.getElementById('nameInput');
 const saveNameBtn=document.getElementById('saveNameBtn');
 
+const appSearch=document.getElementById('appSearch');
+const searchSuggestions=document.getElementById('searchSuggestions');
+
+const restBtn = document.getElementById('restBtn');
+const exitRestBtn = document.getElementById('exitRestBtn');
+
 let userName=localStorage.getItem('userName');
 if(!userName){namePrompt.style.display='flex';}else{welcomeName.textContent=`Welcome, ${userName}!`;}
 
 saveNameBtn.addEventListener('click',()=>{
-  const val=nameInput.value.trim();
-  if(val){localStorage.setItem('userName',val);userName=val;welcomeName.textContent=`Welcome, ${userName}!`;namePrompt.style.display='none';}
+    const val=nameInput.value.trim();
+    if(val){localStorage.setItem('userName',val);userName=val;welcomeName.textContent=`Welcome, ${userName}!`;namePrompt.style.display='none';}
 });
 
 // Settings
-let settings={timezone:'America/Chicago',format:'24',style:'digital',background:'digitalLandscape',appStyle:'light'};
+let settings={timezone:'America/Chicago',format:'12',style:'digital',background:'digitalLandscape',appStyle:'light'};
 const savedSettings=localStorage.getItem('desktopSettings');if(savedSettings){settings={...settings,...JSON.parse(savedSettings)};}
 
-timezoneSelect.value=settings.timezone;formatSelect.value=settings.format;styleSelect.value=settings.style;
 backgroundSelect.value=settings.background;appStyleSelect.value=settings.appStyle;
 
 function updateClock(){
-  const now=new Date();
-  const options={timeZone:settings.timezone,hour12:settings.format==='12',hour:'2-digit',minute:'2-digit',second:'2-digit'};
-  clock.textContent=now.toLocaleTimeString('en-US',options);
-  const local=new Date(now.toLocaleString('en-US',{timeZone:settings.timezone}));
-  const h=local.getHours()%12,m=local.getMinutes(),s=local.getSeconds();
-  hourHand.style.transform=`rotate(${h*30+m/2}deg)`;minuteHand.style.transform=`rotate(${m*6}deg)`;secondHand.style.transform=`rotate(${s*6}deg)`;
+    const now = new Date();
+    const local = new Date(now.toLocaleString('en-US', { timeZone: settings.timezone }));
+
+    let h = local.getHours();
+    const m = local.getMinutes();
+    const s = local.getSeconds();
+
+    // Convert to 12-hour format and pad with leading zeros (e.g. "02:02:30")
+    let h12 = h % 12;
+    if (h12 === 0) h12 = 12;
+    const hh = String(h12).padStart(2, '0');
+    const mm = String(m).padStart(2, '0');
+    const ss = String(s).padStart(2, '0');
+
+    clock.textContent = `${hh}:${mm}:${ss}`;
+
+    // Update analog hands (if visible)
+    const hourAngle = (h % 12) * 30 + (m / 60) * 30 + (s / 3600) * 30;
+    const minuteAngle = m * 6 + (s / 60) * 6;
+    const secondAngle = s * 6;
+
+    if (hourHand) hourHand.style.transform = `rotate(${hourAngle}deg)`;
+    if (minuteHand) minuteHand.style.transform = `rotate(${minuteAngle}deg)`;
+    if (secondHand) secondHand.style.transform = `rotate(${secondAngle}deg)`;
 }
 setInterval(updateClock,1000);updateClock();
 
@@ -627,224 +761,738 @@ const gifBackgrounds = [
   "https://windowscustomization.com/wp-content/uploads/2019/02/Wallpaper.gif",
   "https://windowscustomization.com/wp-content/uploads/2018/12/Anime-And-Scape-Watefal.gif",
   "https://wallpaperaccess.com/full/9336992.gif",
-  "https://i.redd.it/x4hnwsvps4h91.gif"
+  "https://i.redd.it/x4hnwsvps4h91.gif",
+  "https://i.redd.it/uwwte8wps4h91.gif",
+  "https://i.redd.it/lhnvupvps4h91.gif"
 ];
 
+// Battery indicator (small, bottom-left)
+(function(){
+    // inject styles
+    const s = document.createElement('style');
+    s.textContent = `
+    #batteryIndicator{
+        position:fixed;
+        left:18px;
+        bottom:18px;
+        z-index:60;
+        display:flex;
+        gap:8px;
+        align-items:center;
+        padding:6px 8px;
+        border-radius:10px;
+        background: rgba(0,0,0,0.45);
+        color: white;
+        font-size:12px;
+        font-weight:600;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+        backdrop-filter: blur(6px);
+        cursor:default;
+        user-select:none;
+        min-width:56px;
+    }
+    #batteryIndicator .bat-bar{
+        width:38px;
+        height:10px;
+        border-radius:6px;
+        background:rgba(255,255,255,0.12);
+        position:relative;
+        overflow:hidden;
+        box-shadow: inset 0 -2px 6px rgba(0,0,0,0.35);
+        flex:0 0 auto;
+    }
+    #batteryIndicator .bat-level{
+        position:absolute;
+        left:0; top:0; bottom:0;
+        width:50%;
+        background:linear-gradient(90deg,#34d399,#10b981);
+        transition:width 300ms ease, background 300ms ease;
+    }
+    #batteryIndicator .bat-tip{
+        width:4px; height:6px; background:rgba(255,255,255,0.85);
+        margin-left:4px; border-radius:2px;
+        flex:0 0 auto;
+        opacity:0.9;
+    }
+    #batteryIndicator .bat-text{ min-width:26px; text-align:right; opacity:0.95; }
+    body.intro-mode #batteryIndicator{ display:none !important; }
+    `;
+    document.head.appendChild(s);
+
+    // create element
+    const el = document.createElement('div');
+    el.id = 'batteryIndicator';
+    el.setAttribute('aria-live','polite');
+    el.innerHTML = `
+        <div class="bat-bar" aria-hidden="true"><div class="bat-level"></div></div>
+        <div class="bat-tip" aria-hidden="true"></div>
+        <div class="bat-text">--%</div>
+    `;
+    document.body.appendChild(el);
+
+    const levelEl = el.querySelector('.bat-level');
+    const textEl = el.querySelector('.bat-text');
+
+    function setUI(level, charging){
+        const pct = Math.round(level * 100);
+        levelEl.style.width = Math.max(1, pct) + '%';
+        // color thresholds
+        if(charging){
+            levelEl.style.background = 'linear-gradient(90deg,#60a5fa,#3b82f6)';
+        } else if(pct > 60){
+            levelEl.style.background = 'linear-gradient(90deg,#34d399,#10b981)';
+        } else if(pct > 30){
+            levelEl.style.background = 'linear-gradient(90deg,#f59e0b,#f97316)';
+        } else {
+            levelEl.style.background = 'linear-gradient(90deg,#f43f5e,#ef4444)';
+        }
+        textEl.textContent = (charging ? '⚡ ' : '') + pct + '%';
+        textEl.title = charging ? `Charging — ${pct}%` : `${pct}% battery remaining`;
+    }
+
+    // default before data available
+    setUI(0, false);
+    // modern Battery Status API
+    if (navigator.getBattery) {
+        navigator.getBattery().then(batt => {
+            setUI(batt.level, batt.charging);
+            // update on events
+            batt.addEventListener('levelchange', ()=> setUI(batt.level, batt.charging));
+            batt.addEventListener('chargingchange', ()=> setUI(batt.level, batt.charging));
+        }).catch(()=> {
+            // not available / permission denied
+            textEl.textContent = 'N/A';
+            levelEl.style.width = '0%';
+        });
+    } else {
+        // Fallback: show "N/A" on unsupported browsers
+        textEl.textContent = 'N/A';
+        levelEl.style.width = '0%';
+    }
+
+    // small accessibility: click to announce state via alert (non-intrusive)
+    el.addEventListener('click', ()=> {
+        const t = textEl.textContent;
+        try { navigator.clipboard && navigator.clipboard.writeText(t); } catch(e){/* ignore */ }
+    });
+})();
 function applySettings(){
-  localStorage.setItem('desktopSettings', JSON.stringify(settings));
-  clock.style.display = settings.style === 'digital' ? 'block' : 'none';
-  analogClock.style.display = settings.style === 'analog' ? 'block' : 'none';
-  const b = settings.background;
-  document.body.style.transition = 'background 0.8s ease-in-out, opacity 0.8s ease-in-out';
-  document.body.style.backgroundAttachment = 'fixed';
-  if (b === 'digitalLandscape') {
-    const randomGif = gifBackgrounds[Math.floor(Math.random() * gifBackgrounds.length)];
-    document.body.style.background = `url('${randomGif}') center/cover no-repeat fixed`;
-  } else if (b === 'gradient1') {
-    document.body.style.background = "linear-gradient(135deg,#667eea,#764ba2)";
-  } else if (b === 'gradient2') {
-    document.body.style.background = "linear-gradient(135deg,#ff9a9e,#fad0c4)";
-  } else if (b === 'gradient3') {
-    document.body.style.background = "linear-gradient(135deg,#43cea2,#185a9d)";
-  }
-  dockApps.forEach(app => {
-    app.classList.remove('app-light','app-mirror','app-black');
-    app.classList.add(`app-${settings.appStyle}`);
-  });
+    localStorage.setItem('desktopSettings', JSON.stringify(settings));
+    clock.style.display = settings.style === 'digital' ? 'block' : 'none';
+    const b = settings.background;
+    document.body.style.transition = 'background 0.8s ease-in-out, opacity 0.8s ease-in-out';
+    document.body.style.backgroundAttachment = 'fixed';
+
+    // Inject animated gradient + blob keyframes and styles once
+    if (!document.getElementById('gradientAnimations')) {
+        const styleEl = document.createElement('style');
+        styleEl.id = 'gradientAnimations';
+        styleEl.textContent = `
+            /* Base gradient pan */
+            @keyframes gradientShift {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+            }
+
+            /* Soft "floating blob" movements (animate secondary radial layers' positions) */
+            @keyframes blobMoveA {
+                0%   { background-position: 10% 20%, 80% 60%; }
+                50%  { background-position: 30% 40%, 60% 30%; }
+                100% { background-position: 10% 20%, 80% 60%; }
+            }
+            @keyframes blobMoveB {
+                0%   { background-position: 70% 10%, 20% 80%; }
+                50%  { background-position: 50% 30%, 40% 60%; }
+                100% { background-position: 70% 10%, 20% 80%; }
+            }
+
+            /* Subtle sheen/3D highlight glide */
+            @keyframes sheenMove {
+                0% { transform: translateX(-25%) rotate(-12deg); opacity: 0.06; }
+                50% { transform: translateX(25%) rotate(-12deg); opacity: 0.13; }
+                100% { transform: translateX(-25%) rotate(-12deg); opacity: 0.06; }
+            }
+
+            /* A pseudo-element used for glossy 3D sheen */
+            body.toki-sheen {
+                position: relative;
+            }
+            body.toki-sheen::after {
+                content: "";
+                pointer-events: none;
+                position: fixed;
+                left: -40%;
+                top: -40%;
+                width: 180%;
+                height: 180%;
+                transform: rotate(-12deg);
+                background: linear-gradient(90deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0.02) 60%, rgba(255,255,255,0.0) 100%);
+                filter: blur(28px);
+                mix-blend-mode: overlay;
+                z-index: -1;
+                animation: sheenMove 9s ease-in-out infinite;
+            }
+
+            /* Gradient + layered-radial combinations (3 distinct presets) */
+            body[data-gradient="gradient1"] {
+                /* main animated linear gradient (purple-indigo) + two soft radial blobs for depth */
+                background-image:
+                    linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a78bfa 100%),
+                    radial-gradient(40% 30% at 10% 20%, rgba(120,94,255,0.28), transparent 40%),
+                    radial-gradient(30% 25% at 80% 60%, rgba(255,120,200,0.16), transparent 45%);
+                background-size: 200% 200%, 50% 60%, 40% 50%;
+                background-repeat: no-repeat;
+                background-position: 0% 50%, 10% 20%, 80% 60%;
+                animation: gradientShift 12s ease infinite, blobMoveA 10s ease-in-out infinite;
+                will-change: background-position;
+            }
+
+            body[data-gradient="gradient2"] {
+                /* warm-pink peach base with different colored blobs for contrast */
+                background-image:
+                    linear-gradient(135deg, #ff9a9e 0%, #fad0c4 50%, #ffecd2 100%),
+                    radial-gradient(38% 28% at 70% 10%, rgba(255,200,150,0.20), transparent 40%),
+                    radial-gradient(32% 24% at 20% 80%, rgba(255,120,180,0.18), transparent 45%);
+                background-size: 220% 220%, 48% 52%, 36% 44%;
+                background-repeat: no-repeat;
+                background-position: 0% 50%, 70% 10%, 20% 80%;
+                animation: gradientShift 14s ease infinite, blobMoveB 11s ease-in-out infinite;
+                will-change: background-position;
+            }
+
+            body[data-gradient="gradient3"] {
+                /* teal-blue base with deep vignette + floating cool blobs for "oceanic 3D" feel */
+                background-image:
+                    linear-gradient(135deg, #43cea2 0%, #185a9d 50%, #0f172a 100%),
+                    radial-gradient(42% 32% at 20% 30%, rgba(30,200,180,0.20), transparent 45%),
+                    radial-gradient(36% 26% at 82% 70%, rgba(10,60,120,0.18), transparent 50%),
+                    radial-gradient(60% 60% at 50% 90%, rgba(0,0,0,0.18), transparent 65%);
+                background-size: 200% 200%, 50% 60%, 40% 46%, 140% 140%;
+                background-repeat: no-repeat;
+                background-position: 0% 50%, 20% 30%, 82% 70%, 50% 90%;
+                animation: gradientShift 16s ease infinite, blobMoveA 12s ease-in-out infinite, blobMoveB 9s ease-in-out infinite;
+                will-change: background-position;
+            }
+        `;
+        document.head.appendChild(styleEl);
+    }
+
+    // Reset inline background props so CSS rules can take over for animated presets
+    document.body.style.background = '';
+    document.body.style.animation = '';
+    document.body.style.backgroundSize = '';
+    document.body.style.backgroundRepeat = 'no-repeat';
+    // remove any previous dataset flag or sheen class
+    delete document.body.dataset.gradient;
+    document.body.classList.remove('toki-sheen');
+
+    if (b === 'digitalLandscape') {
+        const randomGif = gifBackgrounds[Math.floor(Math.random() * gifBackgrounds.length)];
+        document.body.style.background = `url('${randomGif}') center/cover no-repeat fixed`;
+    } else if (b === 'gradient1' || b === 'gradient2' || b === 'gradient3') {
+        // Use dataset to activate the matching CSS preset which includes animated layers
+        document.body.dataset.gradient = b;
+        // Add a subtle sheen overlay (3D glossy effect)
+        document.body.classList.add('toki-sheen');
+    }
+
+    // Fallback for any other (non-animated) backgrounds
+    else {
+        // leave defaults or set a simple dark fallback
+        document.body.style.background = '#0f172a';
+    }
+
+    // Update app icon styles in dock
+    dockApps.forEach(app => {
+        app.classList.remove('app-light','app-mirror','app-black');
+        app.classList.add(`app-${settings.appStyle}`);
+    });
 }
 applySettings();
 
-[timezoneSelect,formatSelect,styleSelect,backgroundSelect,appStyleSelect].forEach(sel=>{
-  sel.addEventListener('change',()=>{settings[sel.id.replace('Select','')]=sel.value;applySettings();});
+[timezoneSelect,backgroundSelect,appStyleSelect].forEach(sel=>{
+    sel.addEventListener('change',()=>{
+        settings[sel.id.replace('Select','')]=sel.value;applySettings();
+    });
 });
 
-// Apps
-const appSearch=document.getElementById('appSearch');
-const searchSuggestions=document.getElementById('searchSuggestions');
 
-const apps = [
-  {name:'Browser', url:'TokiMate://Browser'},
-  {name:'Mail', url:'TokiMate://Mail'},
-  {name:'Music', url:'TokiMate://Music'},
-  {name:'Photos', url:'TokiMate://Photos'},
-  {name:'Skribbl', url:'TokiMate://Skribbl'},
-  {name:'Credits', url:'credits'}
-];
+let apps = [];
 
-function getAppURL(appName){
-  switch(appName){
-    case 'Browser': return 'https://www.google.com';
-    case 'Mail': return 'https://mail.google.com';
-    case 'Music': return 'https://github.com/AquaTheFailure/MyCreations/blob/main/TokiMateApp/Utilities/Resources/mp3.html';
-    case 'Photos': return 'https://photos.google.com';
-    case 'Skribbl': return 'https://skribbl.io';
-    default: return '';
-  }
+// Load external JSON
+fetch("https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/apps.json")
+    .then(res => res.json())
+    .then(data => apps = data)
+    .catch(err => console.error("Could not load apps.json:", err));
+
+// Return app URL from JSON
+function getAppURL(appName) {
+    const app = apps.find(a => a.name.toLowerCase() === appName.toLowerCase());
+    return app ? app.url : "";
 }
 
-function openApp(url){
-  if(url==='credits'){
-    creditsView.style.display='block';
-    dock.style.display = 'none';
-    clockContainer.style.display = 'none';
-    settingsPanel.style.display = 'none';
-    appSearch.parentElement.style.display = 'none';
-    homeBtn.style.display='block';
-    return;
-  }
-  if(url.startsWith('TokiMate://')){
-    const appName = url.replace('TokiMate://','');
-    const appData = apps.find(a=>a.name===appName);
-    if(appData){
-      iframeView.src = getAppURL(appName);
-      iframeView.style.display='block';
-      homeBtn.style.display='block';
-      dock.style.display = 'none';
-      clockContainer.style.display = 'none';
-      settingsPanel.style.display = 'none';
-      appSearch.parentElement.style.display = 'none';
+// App opener
+function openApp(url) {
+    if (url === 'credits') {
+        creditsView.style.display = 'block';
+        dock.style.display = 'none';
+        clockContainer.style.display = 'none';
+        settingsPanel.style.display = 'none';
+        appSearch.parentElement.style.display = 'none';
+        homeBtn.style.display = 'block';
+        return;
     }
-  }
+
+    if (url.startsWith('TokiMate://')) {
+        const appName = url.replace('TokiMate://', '');
+        iframeView.src = getAppURL(appName);
+        iframeView.style.display = 'block';
+        homeBtn.style.display = 'block';
+        dock.style.display = 'none';
+        clockContainer.style.display = 'none';
+        settingsPanel.style.display = 'none';
+        appSearch.parentElement.style.display = 'none';
+    }
 }
 
-// Dock clicks
+// FIX: Intercept Skribbl opening on dock apps — dockApps is defined above
 dockApps.forEach(app=>{
-  app.addEventListener('click',()=>openApp(app.dataset.url));
+    app.addEventListener('click',()=>{
+        if(app.dataset.app === 'Skribbl'){
+            // Show room popup
+            document.getElementById('roomPrompt').style.display = 'flex';
+            return;
+        }
+        openApp(app.dataset.url);
+    });
 });
 
 // Home button restores everything
 homeBtn.addEventListener('click',()=>{
-  iframeView.style.display='none';
-  homeBtn.style.display='none';
-  dock.style.display = 'flex';
-  clockContainer.style.display = 'flex';
-  appSearch.parentElement.style.display = 'block';
+    iframeView.style.display='none';
+    homeBtn.style.display='none';
+    dock.style.display = 'flex';
+    clockContainer.style.display = 'flex';
+    appSearch.parentElement.style.display = 'block';
 });
 
 // Credits close
 closeCreditsBtn.addEventListener('click', () => {
-  creditsView.style.display = 'none';
-  // Restore main UI elements
-  clockContainer.style.display = 'flex';
-  dock.style.display = 'flex';
-  searchContainer.style.display = 'block';
-  iframeView.style.display = 'none';
-  homeBtn.style.display = 'none';
-  // Refresh the page
-  location.reload();
+        creditsView.style.display = 'none';
+        // Restore main UI elements
+        clockContainer.style.display = 'flex';
+        dock.style.display = 'flex';
+        document.getElementById('searchContainer').style.display = 'block';
+        iframeView.style.display = 'none';
+        homeBtn.style.display = 'none';
 });
 
 // Settings toggle
 clockContainer.addEventListener('click', () => {
-    // Only toggle settings if iframe is not open
-    if (iframeView.style.display !== 'block') {
-        settingsPanel.classList.toggle('active');
-    }
+        // Only toggle settings if iframe is not open
+        if (iframeView.style.display !== 'block') {
+                settingsPanel.classList.toggle('active');
+        }
 });
 
 // Spotlight search
 appSearch.addEventListener('input', () => {
-  const val = appSearch.value.toLowerCase().trim();
-  searchSuggestions.innerHTML = '';
-  if(val.length === 0){searchSuggestions.style.display='none'; return;}
-  
-  const filtered = apps.filter(app => app.name.toLowerCase().includes(val));
-  if(filtered.length === 0){searchSuggestions.style.display='none'; return;}
-  
-  filtered.forEach(app => {
-    const div = document.createElement('div');
-    div.textContent = app.name;
-    div.addEventListener('click', () => {
-      // Autofill with TokiMate:// prefix
-      appSearch.value = `TokiMate://${app.name}`;
-      searchSuggestions.style.display='none';
+    const val = appSearch.value.toLowerCase().trim();
+    searchSuggestions.innerHTML = '';
+    if(val.length === 0){searchSuggestions.style.display='none'; return;}
+
+    const filtered = apps.filter(app => app.name.toLowerCase().includes(val));
+    if(filtered.length === 0){searchSuggestions.style.display='none'; return;}
+
+    filtered.forEach(app => {
+        const div = document.createElement('div');
+        div.textContent = app.name;
+        div.addEventListener('click', () => {
+            // Autofill with TokiMate:// prefix
+            appSearch.value = `TokiMate://${app.name}`;
+            searchSuggestions.style.display='none';
+        });
+        searchSuggestions.appendChild(div);
     });
-    searchSuggestions.appendChild(div);
-  });
-  searchSuggestions.style.display='block';
+    searchSuggestions.style.display='block';
 });
 
 appSearch.addEventListener('keydown', e => {
-  if(e.key==='Enter'){
-    const val = appSearch.value.trim();
-    // Only open if starts with TokiMate://
-    if(val.startsWith('TokiMate://')){
-      const appName = val.replace('TokiMate://','');
-      const match = apps.find(a=>a.name.toLowerCase()===appName.toLowerCase());
-      if(match) openApp(match.url);
+    if(e.key==='Enter'){
+        const val = appSearch.value.trim();
+        // Only open if starts with TokiMate://
+        if(val.startsWith('TokiMate://')){
+            const appName = val.replace('TokiMate://','');
+            const match = apps.find(a=>a.name.toLowerCase()===appName.toLowerCase());
+            if(match) openApp(match.redirect);
+        }
+        searchSuggestions.style.display='none';
     }
-    searchSuggestions.style.display='none';
-  }
 });
-(function(){
-  const _origApply = window.applySettings;
-  if (typeof _origApply !== 'function') return;
 
-  window.applySettings = function(){
-    _origApply();
+// Room prompt elements
+const roomPrompt = document.getElementById('roomPrompt');
+const roomInput = document.getElementById('roomInput');
+const joinRoomBtn = document.getElementById('joinRoomBtn');
+const cancelRoomBtn = document.getElementById('cancelRoomBtn');
 
-    const clockContainerEl = document.getElementById('clockContainer');
-    const dockEl = document.getElementById('dock');
-    const clockEl = document.getElementById('clock');
-    const welcomeEl = document.getElementById('welcomeName');
-    const dockLabels = document.querySelectorAll('.dock-label');
+// Join button → uses roomInput
+joinRoomBtn.addEventListener('click', () => {
+    const code = roomInput.value.trim();
+    let link = 'https://skribbl.io';
 
-    const blackHex = '#0f1c2b';
-    const fontHex = '#17355e';
-
-    if (settings && settings.appStyle === 'black') {
-      // Apply the darker blurred backgrounds and font color
-      if (clockContainerEl) {
-        clockContainerEl.style.background = `${blackHex}`;
-        clockContainerEl.style.backdropFilter = 'blur(18px)';
-        clockContainerEl.style.color = fontHex;
-      }
-
-      if (dockEl) {
-        dockEl.style.background = `${blackHex}`;
-        dockEl.style.backdropFilter = 'blur(18px)';
-        dockEl.style.color = fontHex;
-      }
-
-      if (clockEl) {
-        clockEl.style.color = fontHex;
-        // black outline using multiple text-shadow offsets + subtle black glow
-        clockEl.style.textShadow =
-          '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 6px rgba(0,0,0,0.55)';
-        // enhance in browsers that support it
-        clockEl.style.webkitTextStroke = '0.6px #000';
-      }
-
-      if (welcomeEl) welcomeEl.style.color = fontHex;
-      dockLabels.forEach(l => l.style.color = fontHex);
-
-      // Small visual polish for dock icons when in black mode
-      document.querySelectorAll('.dock-app').forEach(app=>{
-        app.style.boxShadow = '0 10px 30px rgba(0,0,0,0.45)';
-      });
-    } else {
-      // Reset inline styles when leaving black mode
-      [clockContainerEl, dockEl, clockEl, welcomeEl].forEach(el=>{
-        if (!el) return;
-        el.style.background = '';
-        el.style.backdropFilter = '';
-        el.style.color = '';
-      });
-      // remove outline/glow and optional webkit stroke
-      if (clockEl) {
-        clockEl.style.textShadow = '';
-        clockEl.style.webkitTextStroke = '';
-      }
-      dockLabels.forEach(l => l.style.color = '');
-      document.querySelectorAll('.dock-app').forEach(app=>{
-        app.style.boxShadow = '';
-      });
+    if(code !== ''){
+        link = `https://skribbl.io/?${code}`;
     }
-  };
 
-  // Re-run to ensure current state is applied on load
-  applySettings();
+    roomPrompt.style.display = 'none';
+    roomInput.value = '';
+
+    iframeView.src = link;
+    iframeView.style.display = 'block';
+    homeBtn.style.display = 'block';
+    dock.style.display = 'none';
+    clockContainer.style.display = 'none';
+    settingsPanel.style.display = 'none';
+    appSearch.parentElement.style.display = 'none';
+});
+
+// Cancel button → open normal skribbl.io
+cancelRoomBtn.addEventListener('click', () => {
+    roomPrompt.style.display = 'none';
+
+    iframeView.src = 'https://skribbl.io';
+    iframeView.style.display = 'block';
+    homeBtn.style.display = 'block';
+    dock.style.display = 'none';
+    clockContainer.style.display = 'none';
+    settingsPanel.style.display = 'none';
+    appSearch.parentElement.style.display = 'none';
+});
+
+
+// === Skribbl Room Code Popup (alternate nicer prompt) ===
+// If you prefer the animated JS-created overlay approach, you can use the functions below.
+// They won't be used automatically because the static #roomPrompt works fine — they remain here
+// as an option and are safe because they reference dockApps which is defined above.
+
+function promptSkribblRoom() {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.background = 'rgba(0,0,0,0.6)';
+        overlay.style.backdropFilter = 'blur(10px)';
+        overlay.style.display = 'flex';
+        overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center';
+        overlay.style.zIndex = '100';
+
+        const box = document.createElement('div');
+        box.style.background = 'rgba(255,255,255,0.15)';
+        box.style.padding = '35px';
+        box.style.borderRadius = '25px';
+        box.style.backdropFilter = 'blur(20px)';
+        box.style.textAlign = 'center';
+        box.style.color = 'white';
+        box.style.width = '350px';
+        box.style.boxShadow = '0 10px 40px rgba(0,0,0,0.5)';
+
+        const title = document.createElement('h2');
+        title.textContent = 'Join a Skribbl Room';
+        title.style.marginBottom = '10px';
+
+        const subtitle = document.createElement('p');
+        subtitle.textContent = 'If you have a room code, enter it below:';
+        subtitle.style.opacity = '0.85';
+        subtitle.style.marginBottom = '20px';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Enter room code';
+        input.style.width = '80%';
+        input.style.padding = '10px';
+        input.style.borderRadius = '10px';
+        input.style.border = 'none';
+        input.style.marginBottom = '20px';
+        input.style.fontSize = '16px';
+
+        const enterBtn = document.createElement('button');
+        enterBtn.textContent = 'Join';
+        enterBtn.style.padding = '10px 20px';
+        enterBtn.style.border = 'none';
+        enterBtn.style.borderRadius = '10px';
+        enterBtn.style.background = '#4f46e5';
+        enterBtn.style.color = 'white';
+        enterBtn.style.marginRight = '10px';
+        enterBtn.style.cursor = 'pointer';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.style.padding = '10px 20px';
+        cancelBtn.style.border = 'none';
+        cancelBtn.style.borderRadius = '10px';
+        cancelBtn.style.background = '#f43f5e';
+        cancelBtn.style.color = 'white';
+        cancelBtn.style.cursor = 'pointer';
+
+        box.appendChild(title);
+        box.appendChild(subtitle);
+        box.appendChild(input);
+        box.appendChild(document.createElement('br'));
+        box.appendChild(enterBtn);
+        box.appendChild(cancelBtn);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+
+        enterBtn.onclick = () => {
+            const value = input.value.trim();
+            document.body.removeChild(overlay);
+            resolve(value || null);
+        };
+
+        cancelBtn.onclick = () => {
+            document.body.removeChild(overlay);
+            resolve(null);
+        };
+    });
+}
+
+async function handleSkribblLaunch() {
+    const code = await promptSkribblRoom();
+    if (code) {
+        return `https://skribbl.io/?${code}`;
+    }
+    return "https://skribbl.io";
+}
+
+// Modify openApp to detect Skribbl — wrap the original in case it's redefined earlier
+const _openApp = openApp;
+openApp = async function(url) {
+    if(url === 'TokiMate://Skribbl'){
+        // Use the static room prompt in the DOM (preferred) ~ if you want the programmatic overlay,
+        // swap the two lines below.
+        document.getElementById('roomPrompt').style.display = 'flex';
+        return;
+    }
+
+    // if there was an original openApp function, call it, otherwise use our default
+    if(typeof _openApp === 'function') return _openApp(url);
+    // fallback behavior
+    if(url.startsWith('TokiMate://')){
+        const appName = url.replace('TokiMate://','');
+        iframeView.src = getAppURL(appName);
+        iframeView.style.display='block';
+        homeBtn.style.display='block';
+        dock.style.display = 'none';
+        clockContainer.style.display = 'none';
+        settingsPanel.style.display = 'none';
+        appSearch.parentElement.style.display = 'none';
+    }
+};
+
+// REST MODE / FULLSCREEN TOGGLE
+let isResting = false;
+function enterRestMode() {
+    if (isResting) return;
+    isResting = true;
+    document.body.classList.add('resting');
+    exitRestBtn.style.display = 'block';
+    // Try to request fullscreen for immersive rest view
+    const el = document.documentElement;
+    if (el.requestFullscreen) {
+        el.requestFullscreen().catch(()=>{/* ignore errors */});
+    } else if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
+    } else if (el.msRequestFullscreen) {
+        el.msRequestFullscreen();
+    }
+}
+function exitRestMode() {
+    if (!isResting) return;
+    isResting = false;
+    document.body.classList.remove('resting');
+    exitRestBtn.style.display = 'none';
+    // Exit fullscreen if active
+    if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+        if (document.exitFullscreen) {
+            document.exitFullscreen().catch(()=>{/* ignore */});
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+    }
+}
+restBtn.addEventListener('click', () => {
+    if (!isResting) enterRestMode();
+    else exitRestMode();
+});
+exitRestBtn.addEventListener('click', exitRestMode);
+
+// If user exits fullscreen by Esc or other, ensure UI returns
+document.addEventListener('fullscreenchange', ()=>{
+    if (!document.fullscreenElement && isResting) {
+        // user pressed Esc — restore UI
+        exitRestMode();
+    }
+});
+// vendor variant
+document.addEventListener('webkitfullscreenchange', ()=>{
+    if (!document.webkitFullscreenElement && isResting) exitRestMode();
+});
+document.addEventListener('msfullscreenchange', ()=>{
+    if (!document.msFullscreenElement && isResting) exitRestMode();
+});
+
+// AUTO REST MODE - Enter rest mode after 1 minute of inactivity
+let inactivityTimeout;
+const INACTIVITY_TIME = 60000; // 1 minute in milliseconds
+
+function resetInactivityTimer() {
+    clearTimeout(inactivityTimeout);
+    
+    // Only set timer if not already resting
+    if (!isResting) {
+        inactivityTimeout = setTimeout(() => {
+            enterRestMode();
+        }, INACTIVITY_TIME);
+    }
+}
+
+// Track user activity
+document.addEventListener('click', resetInactivityTimer);
+document.addEventListener('keydown', resetInactivityTimer);
+document.addEventListener('mousemove', resetInactivityTimer);
+document.addEventListener('touchstart', resetInactivityTimer);
+
+// Start the timer on page load
+window.addEventListener('load', resetInactivityTimer);
+
+// Also reset timer when exiting rest mode
+function exitRestMode() {
+    if (!isResting) return;
+    isResting = false;
+    document.body.classList.remove('resting');
+    exitRestBtn.style.display = 'none';
+    // Exit fullscreen if active
+    if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+        if (document.exitFullscreen) {
+            document.exitFullscreen().catch(()=>{/* ignore */});
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+    }
+    // Reset inactivity timer
+    resetInactivityTimer();
+}
+(function() {
+    // Only show once per session
+    if (sessionStorage.getItem('toki_intro_shown')) return;
+
+    // Create overlay markup
+    const overlay = document.createElement('div');
+    overlay.id = 'introOverlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-hidden', 'false');
+
+    const dayEl = document.createElement('div');
+    dayEl.className = 'introDay';
+
+    const dateEl = document.createElement('div');
+    dateEl.className = 'introDate';
+
+    const accent = document.createElement('div');
+    accent.className = 'introAccent';
+
+    // Compute localized day + numeric date
+    const now = new Date();
+    // E.g. "Saturday" or localized long weekday
+    const dayStr = now.toLocaleDateString(undefined, { weekday: 'long' });
+    // Numeric date like "June 21, 2025" (you can customize)
+    const dateStr = now.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+
+    dayEl.textContent = dayStr;
+    dateEl.textContent = dateStr;
+
+    overlay.appendChild(dayEl);
+    overlay.appendChild(dateEl);
+    overlay.appendChild(accent);
+
+    // Add intro-mode class to body which hides the rest of the UI via CSS above
+    document.body.classList.add('intro-mode');
+    document.body.appendChild(overlay);
+
+    // Clicking anywhere dismisses the intro and reveals the home screen
+    function dismissIntro() {
+        overlay.classList.add('fadeOut');
+        // small timeout to let fadeOut animation run
+        setTimeout(() => {
+            if (overlay && overlay.parentElement) overlay.parentElement.removeChild(overlay);
+            document.body.classList.remove('intro-mode');
+            sessionStorage.setItem('toki_intro_shown', '1');
+            try { window.focus(); } catch(e) {}
+        }, 420);
+        // remove listener to be safe
+        overlay.removeEventListener('click', dismissIntro);
+        document.removeEventListener('keydown', onKey);
+    }
+
+    function onKey(e) {
+        // allow Enter/Escape to dismiss as well
+        if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ') {
+            dismissIntro();
+        }
+    }
+
+    overlay.addEventListener('click', dismissIntro);
+    document.addEventListener('keydown', onKey);
+
+    // Optional: auto-dismiss after a timeout (uncomment if desired)
+    // setTimeout(dismissIntro, 4000);
 })();
+    (function(){
+      const el = document.getElementById('musicApp');
+      if(!el) return;
+      el.addEventListener('click', async function(e){
+        e.preventDefault();
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
+
+        const raw = el.dataset.raw;
+        if(!raw){ alert('No music URL configured'); return; }
+
+        try {
+          const res = await fetch(raw);
+          if(!res.ok) throw new Error('Fetch failed: ' + res.status);
+          const html = await res.text();
+          const blob = new Blob([html], {type:'text/html'});
+          const blobUrl = URL.createObjectURL(blob);
+
+          const iframe = document.getElementById('iframeView');
+          const home = document.getElementById('homeBtn');
+          const dock = document.getElementById('dock');
+          const clock = document.getElementById('clockContainer');
+          const settings = document.getElementById('settingsPanel');
+          const search = document.getElementById('searchContainer');
+
+          if(iframe){ iframe.src = blobUrl; iframe.style.display = 'block'; }
+          if(home) home.style.display = 'block';
+          if(dock) dock.style.display = 'none';
+          if(clock) clock.style.display = 'none';
+          if(settings) settings.style.display = 'none';
+          if(search) search.style.display = 'none';
+        } catch(err){
+          console.error(err);
+          alert('Failed to load music site.');
+        }
+      });
+    })();
 </script>
 </body>
 </html>
