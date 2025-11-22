@@ -405,7 +405,7 @@ select {width:100%; margin-bottom:10px; padding:8px; border-radius:10px; border:
 <div id="dock">
     <div class="dock-app app-light" data-app="Browser" data-url="TokiMate://Browser" title="Browser">🖥️</div>
     <div class="dock-app app-light" data-app="Mail" data-url="TokiMate://Mail" title="Mail">📧</div>
-    <div id="musicApp" class="dock-app app-light" data-app="Music" data-raw="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/main/TokiMateApp/Apps/music/index.html" title="Music" role="button" aria-label="Music">
+    <div id="musicApp" class="dock-app app-light" data-app="Music" data-raw="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Resources/mp3.html" title="Music" role="button" aria-label="Music">
         <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Icons/music_player.svg" alt="Music" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
     </div>
     <div class="dock-app app-light" data-app="Photos" data-url="TokiMate://Photos" title="Photos">
@@ -565,7 +565,7 @@ const gifBackgrounds = [
     #batteryIndicator{
         position:fixed;
         left:18px;
-        bottom:18px;
+        top:18px;
         z-index:60;
         display:flex;
         gap:8px;
@@ -866,7 +866,9 @@ homeBtn.addEventListener('click',()=>{
     dock.style.display = 'flex';
     clockContainer.style.display = 'flex';
     appSearch.parentElement.style.display = 'block';
+    settingsPanel.style.display = 'none';
 });
+
 
 // Credits close
 closeCreditsBtn.addEventListener('click', () => {
@@ -1086,8 +1088,14 @@ openApp = async function(url) {
     }
 };
 
+// Check if iframe is currently open
+function isIframeOpen() {
+    return document.getElementById('iframeView').style.display === 'block';
+}
+
 // REST MODE / FULLSCREEN TOGGLE
 let isResting = false;
+
 function enterRestMode() {
     if (isResting) return;
     isResting = true;
@@ -1103,6 +1111,7 @@ function enterRestMode() {
         el.msRequestFullscreen();
     }
 }
+
 function exitRestMode() {
     if (!isResting) return;
     isResting = false;
@@ -1118,71 +1127,59 @@ function exitRestMode() {
             document.msExitFullscreen();
         }
     }
+    // Reset inactivity timer when exiting rest mode
+    resetInactivityTimer();
 }
+
 restBtn.addEventListener('click', () => {
     if (!isResting) enterRestMode();
     else exitRestMode();
 });
+
 exitRestBtn.addEventListener('click', exitRestMode);
 
 // If user exits fullscreen by Esc or other, ensure UI returns
 document.addEventListener('fullscreenchange', ()=>{
     if (!document.fullscreenElement && isResting) {
-        // user pressed Esc — restore UI
         exitRestMode();
     }
 });
-// vendor variant
+
 document.addEventListener('webkitfullscreenchange', ()=>{
     if (!document.webkitFullscreenElement && isResting) exitRestMode();
 });
+
 document.addEventListener('msfullscreenchange', ()=>{
     if (!document.msFullscreenElement && isResting) exitRestMode();
 });
 
-// AUTO REST MODE - Enter rest mode after 1 minute of inactivity
+// AUTO REST MODE - Enter rest mode after 1 minute of inactivity (only on home screen)
 let inactivityTimeout;
 const INACTIVITY_TIME = 60000; // 1 minute in milliseconds
 
 function resetInactivityTimer() {
     clearTimeout(inactivityTimeout);
     
-    // Only set timer if not already resting
-    if (!isResting) {
+    // Only set timer if not already resting AND iframe is not open
+    if (!isResting && !isIframeOpen()) {
         inactivityTimeout = setTimeout(() => {
             enterRestMode();
         }, INACTIVITY_TIME);
     }
 }
 
-// Track user activity
-document.addEventListener('click', resetInactivityTimer);
-document.addEventListener('keydown', resetInactivityTimer);
-document.addEventListener('mousemove', resetInactivityTimer);
-document.addEventListener('touchstart', resetInactivityTimer);
+// Track user activity - only reset timer when on home screen
+['click', 'keydown', 'mousemove', 'touchstart'].forEach(event => {
+    document.addEventListener(event, () => {
+        if (!isIframeOpen()) {
+            resetInactivityTimer();
+        }
+    });
+});
 
 // Start the timer on page load
 window.addEventListener('load', resetInactivityTimer);
-
-// Also reset timer when exiting rest mode
-function exitRestMode() {
-    if (!isResting) return;
-    isResting = false;
-    document.body.classList.remove('resting');
-    exitRestBtn.style.display = 'none';
-    // Exit fullscreen if active
-    if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
-        if (document.exitFullscreen) {
-            document.exitFullscreen().catch(()=>{/* ignore */});
-        } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-        } else if (document.msExitFullscreen) {
-            document.msExitFullscreen();
-        }
-    }
-    // Reset inactivity timer
-    resetInactivityTimer();
-}
+// Intro Overlay
 (function() {
     // Only show once per session
     if (sessionStorage.getItem('toki_intro_shown')) return;
@@ -1284,6 +1281,88 @@ function exitRestMode() {
         }
       });
     })();
+
+// VERSION CHECK WITH CONTINUOUS POLLING
+(function(){
+    const currentVersion = "1.0.0"; // Update this manually with each release, you emilio!!!
+    let lastNotifiedVersion = null;
+    let isNotificationVisible = false;
+    
+    async function checkVersion(){
+        try {
+            const res = await fetch("https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/version.json");
+            if(!res.ok) throw new Error('Failed to fetch version');
+            
+            const data = await res.json();
+            const latestVersion = data.version;
+            
+            // Only show notification if version changed and it's different from current
+            if(latestVersion !== currentVersion && latestVersion !== lastNotifiedVersion){
+                lastNotifiedVersion = latestVersion;
+                showNotification(latestVersion);
+            }
+            
+        } catch(err){
+            console.error("Version check failed:", err);
+        }
+    }
+    
+    function showNotification(latestVersion){
+        if(isNotificationVisible) return;
+        isNotificationVisible = true;
+        
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 999;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.4s ease-out;
+            max-width: 300px;
+        `;
+        
+        notification.innerHTML = `⚠ Please Update To Latest Version <a href="https://github.com/AquaTheFailure/MyCreations/blob/main/TokiMateApp/TokiMate.html" target="_blank" style="color: #fbbf24; text-decoration: underline;">here</a>`;
+        notification.style.background = 'rgba(251, 146, 60, 0.9)';
+        notification.style.color = 'white';
+        
+        document.body.appendChild(notification);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.4s ease-in forwards';
+            setTimeout(() => {
+                notification.remove();
+                isNotificationVisible = false;
+            }, 400);
+        }, 5000);
+    }
+    
+    // Add keyframe animations
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(350px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(350px); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Check on load and then every 5 seconds
+    window.addEventListener('load', () => {
+        checkVersion();
+        setInterval(checkVersion, 5000);
+    });
+})();
 </script>
 </body>
 </html>
