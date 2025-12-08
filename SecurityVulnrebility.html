@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Fullscreen styles for iframe */
+        html, body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Iframe with an initial link -->
+    <iframe id="myIframe" src="https://yancharkin.github.io/SpelunkyClassicHDhtml5/"></iframe>
+
+    <script>
+        // Variable to track which link is currently shown
+        let isFirstLink = true;
+
+        // Function to toggle between two links when the "K" key is pressed
+        document.addEventListener('keydown', function(event) {
+            // Check if the key pressed is "K" or "k"
+            if (event.key.toLowerCase() === 'k') {
+                var iframe = document.getElementById('myIframe');
+                
+                // Toggle between the two links
+                if (isFirstLink) {
+                    iframe.src = "https://www.szynalski.com";  // Second link
+                } else {
+                    iframe.src = "https://www.example.com";  // First link
+                }
+
+                // Toggle the state
+                isFirstLink = !isFirstLink;
+            }
+        });
+    </script>
+</body>
+</html>
