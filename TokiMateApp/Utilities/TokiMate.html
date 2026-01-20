@@ -583,6 +583,101 @@ body[data-appstyle="black"] #dock {
         <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Icons/Skribbl_icon.svg" alt="Skribbl" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
     </div>
 
+    <!-- YouTube button — opens external translated YouTube link in a new tab (not in the iframe) -->
+    <div
+        class="dock-app app-light"
+        data-app="YouTube"
+        title="YouTube (opens in new tab)"
+        role="link"
+        tabindex="0"
+        onclick="event.stopPropagation(); window.open('https://www-youtube-com.translate.goog/?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es-419&_x_tr_pto=wapp&themeRefresh=1','_blank','noopener');"
+        onkeydown="if(event.key==='Enter' || event.key===' '){ event.preventDefault(); event.stopPropagation(); window.open('https://www-youtube-com.translate.goog/?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es-419&_x_tr_pto=wapp&themeRefresh=1','_blank','noopener'); }"
+        style="display:flex;justify-content:center;align-items:center;"
+    >
+        <span style="font-size:28px;pointer-events:none;">▶️</span>
+    </div>
+
+    <!-- GeForce NOW Unlocker app -->
+    <div class="dock-app app-mirror" id="emulatorApp" data-app="Emulator Games" title="Emulator Games" aria-haspopup="menu" aria-expanded="false" style="position:relative;">
+        <span style="font-size:28px;pointer-events:none;">🎮</span>
+
+        <!-- simple contextual menu for choosing a link -->
+        <div class="app-menu" role="menu" aria-hidden="true" style="position:absolute;left:50%;transform:translateX(-50%);bottom:100%;margin-bottom:12px;display:none;background:rgba(0,0,0,0.9);color:white;padding:8px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.5);min-width:180px;z-index:40;">
+            <button class="menu-item" data-url="https://classicgamezone.com/games" style="display:block;width:100%;text-align:left;padding:8px 10px;border:none;background:transparent;color:inherit;border-radius:6px;cursor:pointer;">Emulator 1</button>
+            <button class="menu-item" data-url="https://www.retrogames.cc/" style="display:block;width:100%;text-align:left;padding:8px 10px;border:none;background:transparent;color:inherit;border-radius:6px;cursor:pointer;">Emulator 2</button>
+            <button class="menu-item" data-url="https://www-youtube-com.translate.goog/?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es-419&_x_tr_pto=wapp&themeRefresh=1" style="display:block;width:100%;text-align:left;padding:8px 10px;border:none;background:transparent;color:#bbb;border-radius:6px;cursor:pointer;">Test</button>
+        </div>
+
+        <script>
+        (function(){
+            const el = document.getElementById('emulatorApp');
+            if(!el) return;
+            const menu = el.querySelector('.app-menu');
+            const items = el.querySelectorAll('.menu-item');
+
+            function openUrl(url){
+                if(!url) return;
+                const iframe = document.getElementById('iframeView');
+                const home = document.getElementById('homeBtn');
+                const dock = document.getElementById('dock');
+                const clock = document.getElementById('clockContainer');
+                const settings = document.getElementById('settingsPanel');
+                const search = document.getElementById('searchContainer');
+
+                if(iframe) { iframe.src = url; iframe.style.display = 'block'; }
+                if(home) home.style.display = 'block';
+                if(dock) dock.style.display = 'none';
+                if(clock) clock.style.display = 'none';
+                if(settings) settings.style.display = 'none';
+                if(search) search.style.display = 'none';
+                hideMenu();
+            }
+
+            function showMenu(){
+                menu.style.display = 'block';
+                menu.setAttribute('aria-hidden','false');
+                el.setAttribute('aria-expanded','true');
+                // close when clicking outside
+                setTimeout(()=> document.addEventListener('click', onDocClick), 0);
+            }
+            function hideMenu(){
+                menu.style.display = 'none';
+                menu.setAttribute('aria-hidden','true');
+                el.setAttribute('aria-expanded','false');
+                document.removeEventListener('click', onDocClick);
+            }
+            function toggleMenu(){
+                if(menu.style.display === 'block') hideMenu(); else showMenu();
+            }
+            function onDocClick(e){
+                if(!el.contains(e.target)) hideMenu();
+            }
+
+            el.addEventListener('click', function(e){
+                e.preventDefault();
+                // prevent the global dock-app click handlers
+                if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+                else e.stopPropagation();
+                toggleMenu();
+            });
+
+            items.forEach(it=>{
+                it.addEventListener('click', function(ev){
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    const url = this.dataset.url || '';
+                    openUrl(url);
+                });
+            });
+
+            // close on Esc
+            document.addEventListener('keydown', function(ev){
+                if(ev.key === 'Escape') hideMenu();
+            });
+        })();
+        </script>
+    </div>
+
     <!-- Rest / Fullscreen button added to dock -->
     <div class="dock-app app-mirror" id="restBtn" title="Rest Mode" role="button" aria-label="Rest Mode">
         <img src="https://github.com/AquaTheFailure/MyCreations/raw/refs/heads/main/TokiMateApp/Utilities/Icons/fullscreen_icon.svg" alt="Rest Mode" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
@@ -1353,19 +1448,9 @@ document.addEventListener('msfullscreenchange', ()=>{
     if (!document.msFullscreenElement && isResting) exitRestMode();
 });
 
-// AUTO REST MODE - Enter rest mode after 1 minute of inactivity
-let inactivityTimeout;
-const INACTIVITY_TIME = 60000; // 1 minute in milliseconds
-
+// Auto rest mode disabled
 function resetInactivityTimer() {
-    clearTimeout(inactivityTimeout);
-    
-    // Only set timer if not already resting
-    if (!isResting) {
-        inactivityTimeout = setTimeout(() => {
-            enterRestMode();
-        }, INACTIVITY_TIME);
-    }
+    // intentionally left blank — auto rest disabled
 }
 
 // Track user activity
