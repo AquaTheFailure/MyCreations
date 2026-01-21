@@ -469,7 +469,7 @@ body[data-appstyle="black"] #dock {
     </label>
 </div>
 
-<iframe id="iframeView"></iframe>
+<iframe id="iframeView" sandbox="allow-scripts allow-same-origin" allow="fullscreen" allowfullscreen></iframe>
 
 <div id="creditsView">
     <h1>Credits</h1>
@@ -478,6 +478,7 @@ body[data-appstyle="black"] #dock {
         <li>Emilio – SVG design</li>
         <li>Tsukki – Concept and Implementation</li>
         <li>Cole – Testing & User Feedback</li>
+        <li>Johnny - Testing and User Feedback</li>
     </ul>
     <p>Made using HTML, CSS, and JavaScript. <br><br> Please Reload After Closing This.</p>
     <button id="closeCredits">Close</button>
@@ -583,21 +584,37 @@ body[data-appstyle="black"] #dock {
         <img src="https://raw.githubusercontent.com/AquaTheFailure/MyCreations/refs/heads/main/TokiMateApp/Utilities/Icons/Skribbl_icon.svg" alt="Skribbl" style="width:48px;height:48px;pointer-events:none;object-fit:contain;">
     </div>
 
-    <!-- YouTube button — opens external translated YouTube link in a new tab (not in the iframe) -->
-    <div
-        class="dock-app app-light"
-        data-app="YouTube"
-        title="YouTube (opens in new tab)"
-        role="link"
-        tabindex="0"
-        onclick="event.stopPropagation(); window.open('https://www-youtube-com.translate.goog/?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es-419&_x_tr_pto=wapp&themeRefresh=1','_blank','noopener');"
-        onkeydown="if(event.key==='Enter' || event.key===' '){ event.preventDefault(); event.stopPropagation(); window.open('https://www-youtube-com.translate.goog/?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es-419&_x_tr_pto=wapp&themeRefresh=1','_blank','noopener'); }"
-        style="display:flex;justify-content:center;align-items:center;"
-    >
-        <span style="font-size:28px;pointer-events:none;">▶️</span>
+    <!-- TV app: opens a custom website inside the iframe -->
+    <div class="dock-app app-light" id="tvApp" data-url="https://hdtodayz.to/home" title="TV (Custom)">
+        <span style="font-size:28px;pointer-events:none;">📺</span>
     </div>
+    <script>
+    (function(){
+        const el = document.getElementById('tvApp');
+        if(!el) return;
+        el.addEventListener('click', function(e){
+            e.preventDefault();
+            if(e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
+            const url = el.dataset.url || '';
+            if(!url) return;
+            const iframe = document.getElementById('iframeView');
+            const home = document.getElementById('homeBtn');
+            const dock = document.getElementById('dock');
+            const clock = document.getElementById('clockContainer');
+            const settings = document.getElementById('settingsPanel');
+            const search = document.getElementById('searchContainer');
 
-    <!-- GeForce NOW Unlocker app -->
+            if(iframe){ iframe.src = url; iframe.style.display = 'block'; }
+            if(home) home.style.display = 'block';
+            if(dock) dock.style.display = 'none';
+            if(clock) clock.style.display = 'none';
+            if(settings) settings.style.display = 'none';
+            if(search) search.style.display = 'none';
+        });
+    })();
+    </script>
+
+    <!-- Emulator app -->
     <div class="dock-app app-mirror" id="emulatorApp" data-app="Emulator Games" title="Emulator Games" aria-haspopup="menu" aria-expanded="false" style="position:relative;">
         <span style="font-size:28px;pointer-events:none;">🎮</span>
 
