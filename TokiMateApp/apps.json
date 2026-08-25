@@ -25,6 +25,11 @@
     "url": "https://skribbl.io"
   },
   {
+    "name": "GarticPhone",
+    "redirect": "TokiMate://GarticPhone",
+    "url": "https://garticphone.com"
+  },
+  {
     "name": "Credits",
     "redirect": "credits",
     "url": ""
